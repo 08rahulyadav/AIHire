@@ -5,7 +5,7 @@ const router = express.Router();
 router.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Server is running successfully 🚀",
+    message: "Server is running successfully",
   });
 });
 
