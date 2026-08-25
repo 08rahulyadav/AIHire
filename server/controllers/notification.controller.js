@@ -1,14 +1,21 @@
 import Notification from "../models/notification.model.js";
 
+// Get my notifications
 const getMyNotifications = async (req, res, next) => {
   try {
     const notifications = await Notification.find({
       recipient: req.user._id,
     }).sort({ createdAt: -1 });
 
+    const unreadCount = await Notification.countDocuments({
+      recipient: req.user._id,
+      isRead: false,
+    });
+
     res.status(200).json({
       success: true,
       count: notifications.length,
+      unreadCount,
       notifications,
     });
   } catch (error) {
@@ -16,6 +23,7 @@ const getMyNotifications = async (req, res, next) => {
   }
 };
 
+// Mark one notification as read
 const markNotificationAsRead = async (req, res, next) => {
   try {
     const notification = await Notification.findOne({
@@ -44,7 +52,33 @@ const markNotificationAsRead = async (req, res, next) => {
   }
 };
 
+// Mark all notifications as read
+const markAllNotificationsAsRead = async (req, res, next) => {
+  try {
+    const result = await Notification.updateMany(
+      {
+        recipient: req.user._id,
+        isRead: false,
+      },
+      {
+        $set: {
+          isRead: true,
+        },
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "All notifications marked as read",
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getMyNotifications,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
 };

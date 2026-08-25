@@ -113,8 +113,6 @@ const updateApplicationStatus = async (req, res, next) => {
       });
     }
 
-    // Find application belonging to this recruiter
-    // and get candidate details for email
     const application = await Application.findOne({
       _id: req.params.applicationId,
       recruiter: req.user._id,
@@ -127,7 +125,6 @@ const updateApplicationStatus = async (req, res, next) => {
       });
     }
 
-    // Update status
     application.status = status;
 
     await application.save();
@@ -167,9 +164,145 @@ AIHire Team`,
   }
 };
 
+// Get candidate application statistics
+const getCandidateApplicationStats = async (req, res, next) => {
+  try {
+    const stats = await Application.aggregate([
+      {
+        $match: {
+          candidate: req.user._id,
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result = {
+      totalApplications: 0,
+      applied: 0,
+      shortlisted: 0,
+      interview: 0,
+      selected: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    stats.forEach((item) => {
+      result[item._id] = item.count;
+      result.totalApplications += item.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      stats: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get recruiter application statistics
+const getRecruiterApplicationStats = async (req, res, next) => {
+  try {
+    const stats = await Application.aggregate([
+      {
+        $match: {
+          recruiter: req.user._id,
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result = {
+      totalApplicants: 0,
+      applied: 0,
+      shortlisted: 0,
+      interview: 0,
+      selected: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    stats.forEach((item) => {
+      result[item._id] = item.count;
+      result.totalApplicants += item.count;
+    });
+
+    // Total jobs posted by recruiter
+    const totalJobs = await Job.countDocuments({
+      recruiter: req.user._id,
+    });
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalJobs,
+        ...result,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get candidate's recent applications
+const getRecentCandidateApplications = async (req, res, next) => {
+  try {
+    const applications = await Application.find({
+      candidate: req.user._id,
+    })
+      .populate("job", "title company location salary")
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      applications,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get recruiter's recent applications
+const getRecentRecruiterApplications = async (req, res, next) => {
+  try {
+    const applications = await Application.find({
+      recruiter: req.user._id,
+    })
+      .populate("job", "title company location salary")
+      .populate("candidate", "name email")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      applications,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   applyForJob,
   getMyApplications,
   getRecruiterApplications,
   updateApplicationStatus,
+  getCandidateApplicationStats,
+  getRecruiterApplicationStats,
+  getRecentCandidateApplications,
+  getRecentRecruiterApplications,
 };

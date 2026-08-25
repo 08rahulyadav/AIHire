@@ -5,6 +5,10 @@ import {
   getMyApplications,
   getRecruiterApplications,
   updateApplicationStatus,
+  getCandidateApplicationStats,
+  getRecruiterApplicationStats,
+  getRecentCandidateApplications,
+  getRecentRecruiterApplications,
 } from "../controllers/application.controller.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -12,6 +16,7 @@ import roleMiddleware from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
+// Apply for a job - candidate only
 router.post(
   "/",
   authMiddleware,
@@ -19,6 +24,7 @@ router.post(
   applyForJob
 );
 
+// Get candidate's applications
 router.get(
   "/my",
   authMiddleware,
@@ -26,6 +32,23 @@ router.get(
   getMyApplications
 );
 
+// Get candidate application statistics
+router.get(
+  "/my/stats",
+  authMiddleware,
+  roleMiddleware("candidate"),
+  getCandidateApplicationStats
+);
+
+// Get candidate's recent applications
+router.get(
+  "/my/recent",
+  authMiddleware,
+  roleMiddleware("candidate"),
+  getRecentCandidateApplications
+);
+
+// Get recruiter's applications
 router.get(
   "/recruiter",
   authMiddleware,
@@ -33,6 +56,23 @@ router.get(
   getRecruiterApplications
 );
 
+// Get recruiter application statistics
+router.get(
+  "/recruiter/stats",
+  authMiddleware,
+  roleMiddleware("recruiter"),
+  getRecruiterApplicationStats
+);
+
+// Get recruiter's recent applications
+router.get(
+  "/recruiter/recent",
+  authMiddleware,
+  roleMiddleware("recruiter"),
+  getRecentRecruiterApplications
+);
+
+// Update application status - recruiter only
 router.patch(
   "/:applicationId/status",
   authMiddleware,
