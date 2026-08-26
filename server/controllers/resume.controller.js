@@ -1,0 +1,222 @@
+import fs from "fs";
+import path from "path";
+
+import Job from "../models/job.model.js";
+import Resume from "../models/resume.model.js";
+
+import matchResumeToJob from "../utils/matchResumeToJob.js";
+import extractPdfText from "../utils/extractPdfText.js";
+import analyzeResume from "../utils/analyzeResume.js";
+
+// Upload / Replace resume
+const uploadResume = async (req, res, next) => {
+  try {
+    console.log("REQ FILE:", req.file);
+    console.log("CONTENT TYPE:", req.headers["content-type"]);
+
+    // Check file
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume PDF is required",
+      });
+    }
+
+    // Extract text from PDF
+    const extractedText = await extractPdfText(req.file.path);
+
+    // Analyze resume
+    const analysis = analyzeResume(extractedText);
+
+    // Check if candidate already has a resume
+    const existingResume = await Resume.findOne({
+      candidate: req.user._id,
+    });
+
+    // Delete old resume file if it exists
+    if (existingResume?.fileUrl) {
+      const oldFilePath = path.join(
+        process.cwd(),
+        existingResume.fileUrl
+      );
+
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+
+    // Convert Windows path to URL-style path
+    const fileUrl = req.file.path.replace(/\\/g, "/");
+
+    // Resume data
+    const resumeData = {
+      candidate: req.user._id,
+      fileName: req.file.originalname,
+      fileUrl,
+      fileType: "pdf",
+      fileSize: req.file.size,
+
+      // Extracted text
+      extractedText,
+
+      // Resume analysis
+      score: analysis.score,
+      skills: analysis.skills,
+      strengths: analysis.strengths,
+      weaknesses: analysis.weaknesses,
+    };
+
+    let resume;
+
+    // Update existing resume
+    if (existingResume) {
+      resume = await Resume.findOneAndUpdate(
+        {
+          candidate: req.user._id,
+        },
+        {
+          $set: resumeData,
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+    } else {
+      // Create new resume
+      resume = await Resume.create(resumeData);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Resume uploaded and analyzed successfully",
+      resume,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Match candidate resume with a job
+const matchResumeWithJob = async (req, res, next) => {
+  try {
+    const { jobId } = req.params;
+
+    // Find job
+    const job = await Job.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    // Find candidate resume
+    const resume = await Resume.findOne({
+      candidate: req.user._id,
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Please upload your resume first",
+      });
+    }
+
+    // Match resume skills with job skills
+    const match = matchResumeToJob(
+      resume.skills || [],
+      job.skills || []
+    );
+
+    return res.status(200).json({
+      success: true,
+
+      job: {
+        id: job._id,
+        title: job.title,
+        company: job.company,
+        skills: job.skills,
+      },
+
+      resume: {
+        id: resume._id,
+        fileName: resume.fileName,
+        score: resume.score,
+      },
+
+      match,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get my resume
+const getMyResume = async (req, res, next) => {
+  try {
+    const resume = await Resume.findOne({
+      candidate: req.user._id,
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      resume,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete my resume
+const deleteMyResume = async (req, res, next) => {
+  try {
+    const resume = await Resume.findOne({
+      candidate: req.user._id,
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    // Delete physical file
+    if (resume.fileUrl) {
+      const filePath = path.join(
+        process.cwd(),
+        resume.fileUrl
+      );
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Delete database record
+    await Resume.findByIdAndDelete(resume._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Resume deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  uploadResume,
+  getMyResume,
+  deleteMyResume,
+  matchResumeWithJob,
+};

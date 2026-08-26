@@ -1,23 +1,16 @@
 import express from "express";
-
 import cors from "cors";
 
+import resumeRoutes from "./routes/resume.routes.js";
 import jobRoutes from "./routes/job.routes.js";
-
 import applicationRoutes from "./routes/application.routes.js";
-
 import healthRoutes from "./routes/health.routes.js";
-
 import authRoutes from "./routes/auth.routes.js";
-
 import notificationRoutes from "./routes/notification.routes.js";
-
 import testEmailRoutes from "./routes/testEmail.routes.js";
-
 import dashboardRoutes from "./routes/dashboard.routes.js";
 
 import notFound from "./middleware/notFound.js";
-
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
@@ -43,9 +36,11 @@ app.use("/api/v1/applications", applicationRoutes);
 
 app.use("/api/v1/notifications", notificationRoutes);
 
-app.use("/api/v1/test-email", testEmailRoutes);
+app.use("/api/v1/resumes", resumeRoutes);
 
 app.use("/api/v1/dashboard", dashboardRoutes);
+
+app.use("/api/v1/test-email", testEmailRoutes);
 
 app.use(notFound);
 
