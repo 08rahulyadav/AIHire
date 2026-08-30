@@ -58,12 +58,30 @@ const resumeSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    missingSkills: {
+      type: [String],
+      default: [],
+    },
+
+    suggestions: {
+      type: [String],
+      default: [],
+    },
+
+    aiSummary: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Resume = mongoose.model("Resume", resumeSchema);
+const Resume = mongoose.model(
+  "Resume",
+  resumeSchema
+);
 
 export default Resume;
