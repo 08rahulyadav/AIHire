@@ -7,7 +7,15 @@ const roleMiddleware = (...allowedRoles) => {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRole = String(req.user.role || "")
+      .trim()
+      .toLowerCase();
+
+    const normalizedAllowedRoles = allowedRoles.map((role) =>
+      String(role).trim().toLowerCase()
+    );
+
+    if (!normalizedAllowedRoles.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to access this resource",

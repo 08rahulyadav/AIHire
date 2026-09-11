@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import cors from "cors";
 import chatRoutes from "./routes/chat.routes.js";
 import resumeRoutes from "./routes/resume.routes.js";
@@ -14,6 +15,7 @@ import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(cors());
 

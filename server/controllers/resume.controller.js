@@ -8,14 +8,11 @@ import matchResumeToJob from "../utils/matchResumeToJob.js";
 import extractPdfText from "../utils/extractPdfText.js";
 import analyzeResumeWithAI from "../utils/analyzeResumeWithAI.js";
 
-// Upload / Replace resume
+// Upload a new resume
 const uploadResume = async (req, res, next) => {
   try {
     console.log("REQ FILE:", req.file);
-    console.log(
-      "CONTENT TYPE:",
-      req.headers["content-type"]
-    );
+    console.log("CONTENT TYPE:", req.headers["content-type"]);
 
     // Check file
     if (!req.file) {
@@ -34,56 +31,24 @@ const uploadResume = async (req, res, next) => {
     }
 
     // Extract text from PDF
-    const extractedText = await extractPdfText(
-      req.file.path
-    );
+    const extractedText = await extractPdfText(req.file.path);
 
-    if (
-      !extractedText ||
-      extractedText.trim().length < 50
-    ) {
+    if (!extractedText || extractedText.trim().length < 50) {
       return res.status(400).json({
         success: false,
-        message:
-          "Could not extract readable text from resume PDF",
+        message: "Could not extract readable text from resume PDF",
       });
     }
 
-    console.log(
-      "Resume text extracted successfully"
-    );
+    console.log("Resume text extracted successfully");
 
     // Analyze resume using Gemini AI
-    const analysis =
-      await analyzeResumeWithAI(extractedText);
+    const analysis = await analyzeResumeWithAI(extractedText);
 
-    console.log(
-      "Resume AI analysis completed successfully"
-    );
-
-    // Check existing resume
-    const existingResume =
-      await Resume.findOne({
-        candidate: req.user._id,
-      });
-
-    // Delete old resume file
-    if (existingResume?.fileUrl) {
-      const oldFilePath = path.join(
-        process.cwd(),
-        existingResume.fileUrl
-      );
-
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-      }
-    }
+    console.log("Resume AI analysis completed successfully");
 
     // Convert Windows path to URL-style path
-    const fileUrl = req.file.path.replace(
-      /\\/g,
-      "/"
-    );
+   const fileUrl = `/uploads/resumes/${req.file.filename}`;
 
     // Resume data
     const resumeData = {
@@ -107,63 +72,38 @@ const uploadResume = async (req, res, next) => {
 
       weaknesses: analysis.weaknesses || [],
 
-      missingSkills:
-        analysis.missingSkills || [],
+      missingSkills: analysis.missingSkills || [],
 
-      suggestions:
-        analysis.suggestions || [],
+      suggestions: analysis.suggestions || [],
 
-      aiSummary:
-        analysis.summary || "",
+      aiSummary: analysis.summary || "",
     };
 
-    let resume;
-
-    // Update existing resume
-    if (existingResume) {
-      resume =
-        await Resume.findOneAndUpdate(
-          {
-            candidate: req.user._id,
-          },
-          {
-            $set: resumeData,
-          },
-          {
-            new: true,
-            runValidators: true,
-          }
-        );
-    } else {
-      // Create new resume
-      resume =
-        await Resume.create(resumeData);
-    }
+    // Always create a new resume
+    const resume = await Resume.create(resumeData);
 
     return res.status(201).json({
       success: true,
-      message:
-        "Resume uploaded and analyzed successfully",
+      message: "Resume uploaded and analyzed successfully",
       resume,
     });
   } catch (error) {
-    console.error(
-      "Resume upload/AI analysis error:",
-      error
-    );
+    console.error("Resume upload/AI analysis error:", error);
+
+    // Delete uploaded file if processing fails
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
 
     next(error);
   }
 };
 
-// Match candidate resume with a job
-const matchResumeWithJob = async (
-  req,
-  res,
-  next
-) => {
+// Match a selected resume with a job
+const matchResumeWithJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
+    const { resumeId } = req.query;
 
     // Find job
     const job = await Job.findById(jobId);
@@ -175,16 +115,23 @@ const matchResumeWithJob = async (
       });
     }
 
-    // Find candidate resume
-    const resume = await Resume.findOne({
+    // Find selected resume or latest resume
+    const resumeQuery = {
       candidate: req.user._id,
+    };
+
+    if (resumeId) {
+      resumeQuery._id = resumeId;
+    }
+
+    const resume = await Resume.findOne(resumeQuery).sort({
+      createdAt: -1,
     });
 
     if (!resume) {
       return res.status(404).json({
         success: false,
-        message:
-          "Please upload your resume first",
+        message: "Please upload your resume first",
       });
     }
 
@@ -217,41 +164,51 @@ const matchResumeWithJob = async (
   }
 };
 
-// Get my resume
-const getMyResume = async (
-  req,
-  res,
-  next
-) => {
+// Get all resumes of logged-in candidate
+const getMyResume = async (req, res, next) => {
   try {
-    const resume = await Resume.findOne({
+    const resumes = await Resume.find({
       candidate: req.user._id,
+    }).sort({
+      createdAt: -1,
     });
 
-    if (!resume) {
+    if (resumes.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Resume not found",
+        resumes: [],
       });
     }
 
     return res.status(200).json({
       success: true,
-      resume,
+
+      // Latest resume for backward compatibility
+      resume: resumes[0],
+
+      // All resumes for resume selection during apply
+      resumes,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Delete my resume
-const deleteMyResume = async (
-  req,
-  res,
-  next
-) => {
+// Delete a specific resume
+const deleteMyResume = async (req, res, next) => {
   try {
+    const { resumeId } = req.params;
+
+    if (!resumeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume ID is required",
+      });
+    }
+
     const resume = await Resume.findOne({
+      _id: resumeId,
       candidate: req.user._id,
     });
 
@@ -264,10 +221,7 @@ const deleteMyResume = async (
 
     // Delete physical file
     if (resume.fileUrl) {
-      const filePath = path.join(
-        process.cwd(),
-        resume.fileUrl
-      );
+      const filePath = path.join(process.cwd(), resume.fileUrl);
 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -275,14 +229,11 @@ const deleteMyResume = async (
     }
 
     // Delete database record
-    await Resume.findByIdAndDelete(
-      resume._id
-    );
+    await Resume.findByIdAndDelete(resume._id);
 
     return res.status(200).json({
       success: true,
-      message:
-        "Resume deleted successfully",
+      message: "Resume deleted successfully",
     });
   } catch (error) {
     next(error);

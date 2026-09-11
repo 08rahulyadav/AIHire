@@ -1,17 +1,25 @@
 import Application from "../models/application.model.js";
 import Job from "../models/job.model.js";
+import Resume from "../models/resume.model.js";
 import Notification from "../models/notification.model.js";
 import sendEmail from "../utils/sendEmail.js";
 
 // Apply for a job
 const applyForJob = async (req, res, next) => {
   try {
-    const { jobId, coverLetter } = req.body;
+    const { jobId, resumeId, coverLetter } = req.body;
 
     if (!jobId) {
       return res.status(400).json({
         success: false,
         message: "Job ID is required",
+      });
+    }
+
+    if (!resumeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume ID is required",
       });
     }
 
@@ -24,6 +32,20 @@ const applyForJob = async (req, res, next) => {
       });
     }
 
+    // Verify that the selected resume belongs to the logged-in candidate
+    const resume = await Resume.findOne({
+      _id: resumeId,
+      candidate: req.user._id,
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Selected resume not found",
+      });
+    }
+
+    // Prevent duplicate applications
     const existingApplication = await Application.findOne({
       job: jobId,
       candidate: req.user._id,
@@ -40,6 +62,7 @@ const applyForJob = async (req, res, next) => {
       job: jobId,
       candidate: req.user._id,
       recruiter: job.recruiter,
+      resume: resume._id,
       coverLetter: coverLetter || "",
     });
 
@@ -61,6 +84,7 @@ const getMyApplications = async (req, res, next) => {
     })
       .populate("job", "title company location salary")
       .populate("recruiter", "name email")
+      .populate("resume", "fileName fileUrl score skills")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -81,6 +105,7 @@ const getRecruiterApplications = async (req, res, next) => {
     })
       .populate("job", "title company location salary")
       .populate("candidate", "name email")
+      .populate("resume", "fileName fileUrl score skills")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -237,7 +262,6 @@ const getRecruiterApplicationStats = async (req, res, next) => {
       result.totalApplicants += item.count;
     });
 
-    // Total jobs posted by recruiter
     const totalJobs = await Job.countDocuments({
       recruiter: req.user._id,
     });
@@ -262,6 +286,7 @@ const getRecentCandidateApplications = async (req, res, next) => {
     })
       .populate("job", "title company location salary")
       .populate("recruiter", "name email")
+      .populate("resume", "fileName fileUrl score skills")
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -283,6 +308,7 @@ const getRecentRecruiterApplications = async (req, res, next) => {
     })
       .populate("job", "title company location salary")
       .populate("candidate", "name email")
+      .populate("resume", "fileName fileUrl score skills")
       .sort({ createdAt: -1 })
       .limit(5);
 

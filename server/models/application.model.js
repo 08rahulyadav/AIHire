@@ -20,6 +20,13 @@ const applicationSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Resume selected specifically for this job application
+    resume: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Resume",
+      required: true,
+    },
+
     status: {
       type: String,
       enum: [

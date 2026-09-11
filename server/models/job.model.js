@@ -11,6 +11,7 @@ const jobSchema = new mongoose.Schema(
     description: {
       type: String,
       required: true,
+      trim: true,
     },
 
     company: {
@@ -22,16 +23,25 @@ const jobSchema = new mongoose.Schema(
     location: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    jobType: {
+      type: String,
+      default: "Full-time",
+      trim: true,
     },
 
     salary: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     skills: [
       {
         type: String,
+        trim: true,
       },
     ],
 
@@ -46,6 +56,9 @@ const jobSchema = new mongoose.Schema(
   }
 );
 
-const Job = mongoose.model("Job", jobSchema);
+const Job = mongoose.model(
+  "Job",
+  jobSchema
+);
 
 export default Job;

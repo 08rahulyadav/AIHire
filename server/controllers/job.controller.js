@@ -1,5 +1,8 @@
 import Job from "../models/job.model.js";
 
+// ==========================================
+// CREATE JOB
+// ==========================================
 
 const createJob = async (req, res, next) => {
   try {
@@ -10,6 +13,8 @@ const createJob = async (req, res, next) => {
       location,
       salary,
       skills,
+      jobType,
+      type,
     } = req.body;
 
     if (
@@ -17,7 +22,8 @@ const createJob = async (req, res, next) => {
       !description ||
       !company ||
       !location ||
-      !salary
+      salary === undefined ||
+      salary === ""
     ) {
       return res.status(400).json({
         success: false,
@@ -26,13 +32,38 @@ const createJob = async (req, res, next) => {
       });
     }
 
+    const salaryNumber = Number(
+      String(salary).replace(/[₹,\s]/g, "")
+    );
+
+    if (Number.isNaN(salaryNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: "Salary must be a valid number",
+      });
+    }
+
+    let skillsArray = [];
+
+    if (Array.isArray(skills)) {
+      skillsArray = skills
+        .map((skill) => String(skill).trim())
+        .filter(Boolean);
+    } else if (typeof skills === "string") {
+      skillsArray = skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    }
+
     const job = await Job.create({
-      title,
-      description,
-      company,
-      location,
-      salary,
-      skills: skills || [],
+      title: title.trim(),
+      description: description.trim(),
+      company: company.trim(),
+      location: location.trim(),
+      salary: salaryNumber,
+      skills: skillsArray,
+      jobType: jobType || type || "Full-time",
       recruiter: req.user._id,
     });
 
@@ -46,8 +77,10 @@ const createJob = async (req, res, next) => {
   }
 };
 
+// ==========================================
+// GET ALL JOBS
+// ==========================================
 
-// Get All Jobs - Search + Filter + Pagination
 const getAllJobs = async (req, res, next) => {
   try {
     const {
@@ -62,16 +95,31 @@ const getAllJobs = async (req, res, next) => {
 
     const query = {};
 
-    // Search by title, description or company
+    // Search
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { company: { $regex: search, $options: "i" } },
+        {
+          title: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          company: {
+            $regex: search,
+            $options: "i",
+          },
+        },
       ];
     }
 
-    // Location filter
+    // Location
     if (location) {
       query.location = {
         $regex: location,
@@ -79,7 +127,7 @@ const getAllJobs = async (req, res, next) => {
       };
     }
 
-    // Skills filter
+    // Skills
     if (skills) {
       const skillsArray = skills
         .split(",")
@@ -93,7 +141,7 @@ const getAllJobs = async (req, res, next) => {
       };
     }
 
-    // Salary filter
+    // Salary
     if (minSalary || maxSalary) {
       query.salary = {};
 
@@ -106,14 +154,18 @@ const getAllJobs = async (req, res, next) => {
       }
     }
 
-    // Pagination
-    const currentPage = Math.max(Number(page) || 1, 1);
+    const currentPage = Math.max(
+      Number(page) || 1,
+      1
+    );
+
     const itemsPerPage = Math.min(
       Math.max(Number(limit) || 10, 1),
       50
     );
 
-    const skip = (currentPage - 1) * itemsPerPage;
+    const skip =
+      (currentPage - 1) * itemsPerPage;
 
     const [jobs, total] = await Promise.all([
       Job.find(query)
@@ -125,7 +177,9 @@ const getAllJobs = async (req, res, next) => {
       Job.countDocuments(query),
     ]);
 
-    const totalPages = Math.ceil(total / itemsPerPage);
+    const totalPages = Math.ceil(
+      total / itemsPerPage
+    );
 
     res.status(200).json({
       success: true,
@@ -140,11 +194,38 @@ const getAllJobs = async (req, res, next) => {
     next(error);
   }
 };
-// Get Single Job
+
+// ==========================================
+// GET MY JOBS
+// ==========================================
+
+const getMyJobs = async (req, res, next) => {
+  try {
+    const jobs = await Job.find({
+      recruiter: req.user._id,
+    })
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// GET SINGLE JOB
+// ==========================================
+
 const getJobById = async (req, res, next) => {
   try {
-    const job = await Job.findById(req.params.id)
-      .populate("recruiter", "name email");
+    const job = await Job.findById(
+      req.params.id
+    ).populate("recruiter", "name email");
 
     if (!job) {
       return res.status(404).json({
@@ -161,9 +242,16 @@ const getJobById = async (req, res, next) => {
     next(error);
   }
 };
+
+// ==========================================
+// UPDATE JOB
+// ==========================================
+
 const updateJob = async (req, res, next) => {
   try {
-    const job = await Job.findById(req.params.id);
+    const job = await Job.findById(
+      req.params.id
+    );
 
     if (!job) {
       return res.status(404).json({
@@ -172,21 +260,59 @@ const updateJob = async (req, res, next) => {
       });
     }
 
-    if (job.recruiter.toString() !== req.user._id.toString()) {
+    if (
+      job.recruiter.toString() !==
+      req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
-        message: "You can only update your own jobs",
+        message:
+          "You can only update your own jobs",
       });
     }
 
-    const updatedJob = await Job.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
+    const updateData = {
+      ...req.body,
+    };
+
+    if (updateData.salary !== undefined) {
+      const salaryNumber = Number(
+        String(updateData.salary).replace(
+          /[₹,\s]/g,
+          ""
+        )
+      );
+
+      if (Number.isNaN(salaryNumber)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Salary must be a valid number",
+        });
       }
-    );
+
+      updateData.salary = salaryNumber;
+    }
+
+    if (typeof updateData.skills === "string") {
+      updateData.skills = updateData.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    }
+
+    const updatedJob =
+      await Job.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).populate(
+        "recruiter",
+        "name email"
+      );
 
     res.status(200).json({
       success: true,
@@ -197,9 +323,16 @@ const updateJob = async (req, res, next) => {
     next(error);
   }
 };
+
+// ==========================================
+// DELETE JOB
+// ==========================================
+
 const deleteJob = async (req, res, next) => {
   try {
-    const job = await Job.findById(req.params.id);
+    const job = await Job.findById(
+      req.params.id
+    );
 
     if (!job) {
       return res.status(404).json({
@@ -208,14 +341,20 @@ const deleteJob = async (req, res, next) => {
       });
     }
 
-    if (job.recruiter.toString() !== req.user._id.toString()) {
+    if (
+      job.recruiter.toString() !==
+      req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
-        message: "You can only delete your own jobs",
+        message:
+          "You can only delete your own jobs",
       });
     }
 
-    await Job.findByIdAndDelete(req.params.id);
+    await Job.findByIdAndDelete(
+      req.params.id
+    );
 
     res.status(200).json({
       success: true,
@@ -226,4 +365,15 @@ const deleteJob = async (req, res, next) => {
   }
 };
 
-export { createJob, getAllJobs,getJobById, updateJob, deleteJob, };
+// ==========================================
+// EXPORTS
+// ==========================================
+
+export {
+  createJob,
+  getAllJobs,
+  getMyJobs,
+  getJobById,
+  updateJob,
+  deleteJob,
+};

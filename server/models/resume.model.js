@@ -6,7 +6,6 @@ const resumeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
     },
 
     fileName: {
@@ -79,9 +78,6 @@ const resumeSchema = new mongoose.Schema(
   }
 );
 
-const Resume = mongoose.model(
-  "Resume",
-  resumeSchema
-);
+const Resume = mongoose.model("Resume", resumeSchema);
 
 export default Resume;

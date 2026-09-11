@@ -13,7 +13,7 @@ import uploadResumeMiddleware from "../middleware/uploadResume.js";
 
 const router = express.Router();
 
-// Upload / replace resume
+// Upload a new resume
 router.post(
   "/",
   authMiddleware,
@@ -22,7 +22,7 @@ router.post(
   uploadResume
 );
 
-// Get my resume
+// Get all resumes of logged-in candidate
 router.get(
   "/my",
   authMiddleware,
@@ -30,7 +30,7 @@ router.get(
   getMyResume
 );
 
-// Match resume with job
+// Match selected resume with job
 router.get(
   "/match/:jobId",
   authMiddleware,
@@ -38,9 +38,9 @@ router.get(
   matchResumeWithJob
 );
 
-// Delete my resume
+// Delete a specific resume
 router.delete(
-  "/my",
+  "/:resumeId",
   authMiddleware,
   roleMiddleware("candidate"),
   deleteMyResume
