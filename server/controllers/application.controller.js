@@ -4,10 +4,16 @@ import Resume from "../models/resume.model.js";
 import Notification from "../models/notification.model.js";
 import sendEmail from "../utils/sendEmail.js";
 
-// Apply for a job
+// ======================================================
+// APPLY FOR JOB
+// ======================================================
+
 const applyForJob = async (req, res, next) => {
   try {
-    const { jobId, resumeId, coverLetter } = req.body;
+    // jobId comes from URL: /applications/:jobId
+    // resumeId and coverLetter come from body
+    const jobId = req.params.jobId || req.body.jobId;
+    const { resumeId, coverLetter } = req.body;
 
     if (!jobId) {
       return res.status(400).json({
@@ -32,7 +38,7 @@ const applyForJob = async (req, res, next) => {
       });
     }
 
-    // Verify that the selected resume belongs to the logged-in candidate
+    // Selected resume must belong to logged-in candidate
     const resume = await Resume.findOne({
       _id: resumeId,
       candidate: req.user._id,
@@ -63,12 +69,110 @@ const applyForJob = async (req, res, next) => {
       candidate: req.user._id,
       recruiter: job.recruiter,
       resume: resume._id,
-      coverLetter: coverLetter || "",
+      coverLetter: coverLetter?.trim() || "",
     });
 
-    res.status(201).json({
+    // Notify recruiter
+    if (job.recruiter) {
+      try {
+        await Notification.create({
+          recipient: job.recruiter,
+          type: "new_application",
+          title: "New Job Application",
+          message: `A candidate has applied for your job: ${job.title}.`,
+          relatedApplication: application._id,
+        });
+      } catch (notificationError) {
+        console.error(
+          "Recruiter notification error:",
+          notificationError
+        );
+      }
+    }
+
+    // Populate response
+    const populatedApplication =
+      await Application.findById(application._id)
+        .populate(
+          "job",
+          "title company location salary description skills jobType"
+        )
+        .populate("candidate", "name email")
+        .populate("recruiter", "name email")
+        .populate(
+          "resume",
+          "fileName fileUrl score skills"
+        );
+
+    return res.status(201).json({
       success: true,
       message: "Application submitted successfully",
+      application: populatedApplication,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ======================================================
+// GET MY APPLICATIONS - CANDIDATE
+// ======================================================
+
+const getMyApplications = async (req, res, next) => {
+  try {
+    const applications = await Application.find({
+      candidate: req.user._id,
+    })
+      .populate(
+        "job",
+        "title company location salary description skills jobType"
+      )
+      .populate("recruiter", "name email")
+      .populate(
+        "resume",
+        "fileName fileUrl score skills"
+      )
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: applications.length,
+      applications,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ======================================================
+// GET SINGLE APPLICATION - CANDIDATE
+// ======================================================
+
+const getApplicationById = async (req, res, next) => {
+  try {
+    const application = await Application.findOne({
+      _id: req.params.applicationId,
+      candidate: req.user._id,
+    })
+      .populate(
+        "job",
+        "title company location salary description skills jobType"
+      )
+      .populate("recruiter", "name email")
+      .populate(
+        "resume",
+        "fileName fileUrl score skills"
+      );
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
       application,
     });
   } catch (error) {
@@ -76,39 +180,31 @@ const applyForJob = async (req, res, next) => {
   }
 };
 
-// Get candidate's applications
-const getMyApplications = async (req, res, next) => {
-  try {
-    const applications = await Application.find({
-      candidate: req.user._id,
-    })
-      .populate("job", "title company location salary")
-      .populate("recruiter", "name email")
-      .populate("resume", "fileName fileUrl score skills")
-      .sort({ createdAt: -1 });
+// ======================================================
+// GET RECRUITER APPLICATIONS
+// ======================================================
 
-    res.status(200).json({
-      success: true,
-      count: applications.length,
-      applications,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get recruiter's applications
-const getRecruiterApplications = async (req, res, next) => {
+const getRecruiterApplications = async (
+  req,
+  res,
+  next
+) => {
   try {
     const applications = await Application.find({
       recruiter: req.user._id,
     })
-      .populate("job", "title company location salary")
+      .populate(
+        "job",
+        "title company location salary description skills jobType"
+      )
       .populate("candidate", "name email")
-      .populate("resume", "fileName fileUrl score skills")
+      .populate(
+        "resume",
+        "fileName fileUrl score skills"
+      )
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: applications.length,
       applications,
@@ -118,8 +214,15 @@ const getRecruiterApplications = async (req, res, next) => {
   }
 };
 
-// Update application status
-const updateApplicationStatus = async (req, res, next) => {
+// ======================================================
+// UPDATE APPLICATION STATUS
+// ======================================================
+
+const updateApplicationStatus = async (
+  req,
+  res,
+  next
+) => {
   try {
     const { status } = req.body;
 
@@ -129,6 +232,7 @@ const updateApplicationStatus = async (req, res, next) => {
       "interview",
       "selected",
       "rejected",
+      "withdrawn",
     ];
 
     if (!allowedStatuses.includes(status)) {
@@ -154,7 +258,7 @@ const updateApplicationStatus = async (req, res, next) => {
 
     await application.save();
 
-    // Create notification for candidate
+    // Candidate notification
     await Notification.create({
       recipient: application.candidate._id,
       type: "application_status",
@@ -163,11 +267,12 @@ const updateApplicationStatus = async (req, res, next) => {
       relatedApplication: application._id,
     });
 
-    // Send email to candidate
-    await sendEmail({
-      to: application.candidate.email,
-      subject: "AIHire - Application Status Updated",
-      text: `Hello ${application.candidate.name},
+    // Candidate email
+    try {
+      await sendEmail({
+        to: application.candidate.email,
+        subject: "AIHire - Application Status Updated",
+        text: `Hello ${application.candidate.name},
 
 Your application status has been updated to: ${status}.
 
@@ -177,11 +282,14 @@ Thank you for using AIHire.
 
 Regards,
 AIHire Team`,
-    });
+      });
+    } catch (emailError) {
+      console.error("Application email error:", emailError);
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Application status updated and email sent successfully",
+      message: "Application status updated successfully",
       application,
     });
   } catch (error) {
@@ -189,8 +297,15 @@ AIHire Team`,
   }
 };
 
-// Get candidate application statistics
-const getCandidateApplicationStats = async (req, res, next) => {
+// ======================================================
+// CANDIDATE APPLICATION STATS
+// ======================================================
+
+const getCandidateApplicationStats = async (
+  req,
+  res,
+  next
+) => {
   try {
     const stats = await Application.aggregate([
       {
@@ -217,11 +332,19 @@ const getCandidateApplicationStats = async (req, res, next) => {
     };
 
     stats.forEach((item) => {
-      result[item._id] = item.count;
+      if (
+        Object.prototype.hasOwnProperty.call(
+          result,
+          item._id
+        )
+      ) {
+        result[item._id] = item.count;
+      }
+
       result.totalApplications += item.count;
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       stats: result,
     });
@@ -230,8 +353,15 @@ const getCandidateApplicationStats = async (req, res, next) => {
   }
 };
 
-// Get recruiter application statistics
-const getRecruiterApplicationStats = async (req, res, next) => {
+// ======================================================
+// RECRUITER APPLICATION STATS
+// ======================================================
+
+const getRecruiterApplicationStats = async (
+  req,
+  res,
+  next
+) => {
   try {
     const stats = await Application.aggregate([
       {
@@ -258,7 +388,15 @@ const getRecruiterApplicationStats = async (req, res, next) => {
     };
 
     stats.forEach((item) => {
-      result[item._id] = item.count;
+      if (
+        Object.prototype.hasOwnProperty.call(
+          result,
+          item._id
+        )
+      ) {
+        result[item._id] = item.count;
+      }
+
       result.totalApplicants += item.count;
     });
 
@@ -266,7 +404,7 @@ const getRecruiterApplicationStats = async (req, res, next) => {
       recruiter: req.user._id,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       stats: {
         totalJobs,
@@ -278,19 +416,32 @@ const getRecruiterApplicationStats = async (req, res, next) => {
   }
 };
 
-// Get candidate's recent applications
-const getRecentCandidateApplications = async (req, res, next) => {
+// ======================================================
+// RECENT CANDIDATE APPLICATIONS
+// ======================================================
+
+const getRecentCandidateApplications = async (
+  req,
+  res,
+  next
+) => {
   try {
     const applications = await Application.find({
       candidate: req.user._id,
     })
-      .populate("job", "title company location salary")
+      .populate(
+        "job",
+        "title company location salary"
+      )
       .populate("recruiter", "name email")
-      .populate("resume", "fileName fileUrl score skills")
+      .populate(
+        "resume",
+        "fileName fileUrl score skills"
+      )
       .sort({ createdAt: -1 })
       .limit(5);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: applications.length,
       applications,
@@ -300,19 +451,32 @@ const getRecentCandidateApplications = async (req, res, next) => {
   }
 };
 
-// Get recruiter's recent applications
-const getRecentRecruiterApplications = async (req, res, next) => {
+// ======================================================
+// RECENT RECRUITER APPLICATIONS
+// ======================================================
+
+const getRecentRecruiterApplications = async (
+  req,
+  res,
+  next
+) => {
   try {
     const applications = await Application.find({
       recruiter: req.user._id,
     })
-      .populate("job", "title company location salary")
+      .populate(
+        "job",
+        "title company location salary"
+      )
       .populate("candidate", "name email")
-      .populate("resume", "fileName fileUrl score skills")
+      .populate(
+        "resume",
+        "fileName fileUrl score skills"
+      )
       .sort({ createdAt: -1 })
       .limit(5);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: applications.length,
       applications,
@@ -322,9 +486,14 @@ const getRecentRecruiterApplications = async (req, res, next) => {
   }
 };
 
+// ======================================================
+// EXPORTS
+// ======================================================
+
 export {
   applyForJob,
   getMyApplications,
+  getApplicationById,
   getRecruiterApplications,
   updateApplicationStatus,
   getCandidateApplicationStats,

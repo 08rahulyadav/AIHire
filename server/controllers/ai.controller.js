@@ -21,16 +21,17 @@ const chatWithAI = async (req, res, next) => {
       message: message.trim(),
     });
 
-    // Generate AI response
-    const interaction = await ai.interactions.create({
+    // Gemini AI
+    const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
-      input: message.trim(),
+      contents: message.trim(),
     });
 
     const reply =
-      interaction.output_text || "Sorry, I could not generate a response.";
+      response.text?.trim() ||
+      "Sorry, I could not generate a response.";
 
-    // Save AI message
+    // Save AI response
     await ChatMessage.create({
       candidate: candidateId,
       role: "assistant",
@@ -42,6 +43,7 @@ const chatWithAI = async (req, res, next) => {
       reply,
     });
   } catch (error) {
+    console.error("AI Chat Error:", error);
     next(error);
   }
 };

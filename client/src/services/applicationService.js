@@ -1,51 +1,95 @@
 import axios from "./axios";
 
-// Candidate
-const applyForJob = async (jobId, resumeId, coverLetter = "") => {
-  const response = await axios.post("/applications", {
-    jobId,
-    resumeId,
-    coverLetter,
-  });
+// ==========================================
+// CANDIDATE
+// ==========================================
+
+// Apply for job
+const applyForJob = async (
+  jobId,
+  resumeId,
+  coverLetter = ""
+) => {
+  const response = await axios.post(
+    `/applications/${jobId}`,
+    {
+      jobId,
+      resumeId,
+      coverLetter,
+    }
+  );
 
   return response.data;
 };
 
+// Get my applications
 const getMyApplications = async () => {
-  const response = await axios.get("/applications/my");
+  const response = await axios.get(
+    "/applications/my"
+  );
+
   return response.data;
 };
 
+// Candidate stats
 const getMyApplicationStats = async () => {
-  const response = await axios.get("/applications/my/stats");
+  const response = await axios.get(
+    "/applications/candidate/stats"
+  );
+
   return response.data;
 };
 
+// Candidate recent applications
 const getRecentApplications = async () => {
-  const response = await axios.get("/applications/my/recent");
+  const response = await axios.get(
+    "/applications/candidate/recent"
+  );
+
   return response.data;
 };
 
-// Recruiter
+// ==========================================
+// RECRUITER
+// ==========================================
+
+// Get recruiter applications
 const getRecruiterApplications = async () => {
-  const response = await axios.get("/applications/recruiter");
+  const response = await axios.get(
+    "/applications/recruiter/all"
+  );
+
   return response.data;
 };
 
+// Recruiter stats
 const getRecruiterApplicationStats = async () => {
-  const response = await axios.get("/applications/recruiter/stats");
+  const response = await axios.get(
+    "/applications/recruiter/stats"
+  );
+
   return response.data;
 };
 
+// Recruiter recent applications
 const getRecentRecruiterApplications = async () => {
-  const response = await axios.get("/applications/recruiter/recent");
+  const response = await axios.get(
+    "/applications/recruiter/recent"
+  );
+
   return response.data;
 };
 
-const updateApplicationStatus = async (applicationId, status) => {
+// Update application status
+const updateApplicationStatus = async (
+  applicationId,
+  status
+) => {
   const response = await axios.patch(
-    `/applications/${applicationId}/status`,
-    { status }
+    `/applications/recruiter/${applicationId}/status`,
+    {
+      status,
+    }
   );
 
   return response.data;

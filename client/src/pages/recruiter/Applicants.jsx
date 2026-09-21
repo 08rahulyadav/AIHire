@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
+
 import {
   FiUsers,
   FiMail,
@@ -7,6 +9,7 @@ import {
   FiFileText,
   FiExternalLink,
   FiRefreshCw,
+  FiMessageCircle,
 } from "react-icons/fi";
 
 import {
@@ -19,15 +22,22 @@ const Applicants = () => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
 
+  // ==========================================
+  // FETCH APPLICANTS
+  // ==========================================
+
   const fetchApplicants = async () => {
     try {
       setLoading(true);
 
       const response = await getRecruiterApplications();
 
-      setApplicants(response.applications || []);
+      setApplicants(response?.applications || []);
     } catch (error) {
-      console.error("Fetch recruiter applications error:", error);
+      console.error(
+        "Fetch recruiter applications error:",
+        error.response?.data || error.message
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -42,7 +52,14 @@ const Applicants = () => {
     fetchApplicants();
   }, []);
 
-  const handleStatusChange = async (applicationId, newStatus) => {
+  // ==========================================
+  // UPDATE APPLICATION STATUS
+  // ==========================================
+
+  const handleStatusChange = async (
+    applicationId,
+    newStatus
+  ) => {
     try {
       setUpdatingId(applicationId);
 
@@ -51,7 +68,8 @@ const Applicants = () => {
         newStatus
       );
 
-      const updatedApplication = response.application;
+      const updatedApplication =
+        response?.application;
 
       setApplicants((previousApplicants) =>
         previousApplicants.map((application) =>
@@ -66,22 +84,29 @@ const Applicants = () => {
       );
 
       toast.success(
-        response.message || "Application status updated"
+        response?.message ||
+          "Application status updated"
       );
     } catch (error) {
-      console.error("Update application status error:", error);
+      console.error(
+        "Update application status error:",
+        error.response?.data || error.message
+      );
 
       toast.error(
         error.response?.data?.message ||
           "Failed to update application status"
       );
 
-      // Reload original data in case update failed
       await fetchApplicants();
     } finally {
       setUpdatingId(null);
     }
   };
+
+  // ==========================================
+  // STATUS CLASS
+  // ==========================================
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -102,21 +127,39 @@ const Applicants = () => {
     }
   };
 
+  // ==========================================
+  // FORMAT STATUS
+  // ==========================================
+
   const formatStatus = (status) => {
     if (!status) return "Applied";
 
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    return (
+      status.charAt(0).toUpperCase() +
+      status.slice(1)
+    );
   };
+
+  // ==========================================
+  // RESUME URL
+  // ==========================================
 
   const getResumeUrl = (fileUrl) => {
     if (!fileUrl) return null;
 
-    if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+    if (
+      fileUrl.startsWith("http://") ||
+      fileUrl.startsWith("https://")
+    ) {
       return fileUrl;
     }
 
     return `http://localhost:7000${fileUrl}`;
   };
+
+  // ==========================================
+  // LOADING
+  // ==========================================
 
   if (loading) {
     return (
@@ -136,15 +179,23 @@ const Applicants = () => {
     );
   }
 
+  // ==========================================
+  // PAGE
+  // ==========================================
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-7xl px-6 py-10">
 
-        {/* Header */}
+        {/* ======================================
+            HEADER
+        ====================================== */}
+
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <div className="mb-2 flex items-center gap-2 text-blue-400">
               <FiUsers />
+
               <span className="text-sm font-medium">
                 Recruiter Applications
               </span>
@@ -155,7 +206,8 @@ const Applicants = () => {
             </h1>
 
             <p className="mt-2 text-slate-400">
-              View and manage candidates who applied for your jobs.
+              View and manage candidates who applied
+              for your jobs.
             </p>
           </div>
 
@@ -169,7 +221,10 @@ const Applicants = () => {
           </button>
         </div>
 
-        {/* Applicant Count */}
+        {/* ======================================
+            APPLICANT COUNT
+        ====================================== */}
+
         <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-blue-500/10 p-3">
@@ -188,7 +243,10 @@ const Applicants = () => {
           </div>
         </div>
 
-        {/* Empty State */}
+        {/* ======================================
+            EMPTY STATE
+        ====================================== */}
+
         {applicants.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-12 text-center">
             <FiUsers className="mx-auto text-5xl text-slate-600" />
@@ -198,26 +256,39 @@ const Applicants = () => {
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
-              No candidates have applied for your jobs yet.
+              No candidates have applied for your
+              jobs yet.
             </p>
           </div>
         ) : (
-          /* Applicants */
+
+          /* ======================================
+             APPLICANTS
+          ====================================== */
+
           <div className="space-y-5">
             {applicants.map((application) => {
               const resumeUrl = getResumeUrl(
                 application.resume?.fileUrl
               );
 
+              const candidateId =
+                application.candidate?._id;
+
               return (
                 <div
                   key={application._id}
                   className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
                 >
-                  {/* Top */}
+
+                  {/* ==================================
+                      TOP
+                  ================================== */}
+
                   <div className="flex flex-col justify-between gap-5 lg:flex-row">
 
-                    {/* Candidate */}
+                    {/* CANDIDATE */}
+
                     <div className="flex gap-4">
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
                         <FiUsers className="text-xl text-blue-400" />
@@ -230,26 +301,63 @@ const Applicants = () => {
                         </h2>
 
                         <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-400">
+
                           <span className="flex items-center gap-2">
                             <FiMail />
+
                             {application.candidate?.email ||
                               "No email"}
                           </span>
 
                           <span className="flex items-center gap-2">
                             <FiBriefcase />
+
                             {application.job?.title ||
                               "Unknown Job"}
                           </span>
+
                         </div>
                       </div>
                     </div>
 
-                    {/* Status */}
-                    <div>
+                    {/* ==================================
+                        ACTIONS
+                    ================================== */}
+
+                    <div className="flex flex-wrap items-center gap-3">
+
+                      {/* CHAT BUTTON */}
+
+                      {candidateId ? (
+                        <Link
+                          to={`/direct-chat/${candidateId}`}
+                          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                        >
+                          <FiMessageCircle />
+                          Chat
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-slate-400"
+                        >
+                          <FiMessageCircle />
+                          Chat unavailable
+                        </button>
+                      )}
+
+                      {/* STATUS */}
+
                       <select
-                        value={application.status || "applied"}
-                        disabled={updatingId === application._id}
+                        value={
+                          application.status ||
+                          "applied"
+                        }
+                        disabled={
+                          updatingId ===
+                          application._id
+                        }
                         onChange={(event) =>
                           handleStatusChange(
                             application._id,
@@ -283,10 +391,14 @@ const Applicants = () => {
                     </div>
                   </div>
 
-                  {/* Details */}
+                  {/* ==================================
+                      DETAILS
+                  ================================== */}
+
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
 
-                    {/* Job */}
+                    {/* JOB */}
+
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
                       <div className="flex items-center gap-2 text-sm text-slate-500">
                         <FiBriefcase />
@@ -304,7 +416,8 @@ const Applicants = () => {
                       </p>
                     </div>
 
-                    {/* Resume */}
+                    {/* RESUME */}
+
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
                       <div className="flex items-center gap-2 text-sm text-slate-500">
                         <FiFileText />
@@ -316,9 +429,11 @@ const Applicants = () => {
                           "Resume not available"}
                       </p>
 
-                      {application.resume?.score !== undefined && (
+                      {application.resume?.score !==
+                        undefined && (
                         <p className="mt-1 text-sm text-blue-400">
-                          AI Score: {application.resume.score}/100
+                          AI Score:{" "}
+                          {application.resume.score}/100
                         </p>
                       )}
 
@@ -335,14 +450,17 @@ const Applicants = () => {
                       )}
                     </div>
 
-                    {/* Status */}
+                    {/* APPLICATION STATUS */}
+
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
                       <p className="text-sm text-slate-500">
                         Application Status
                       </p>
 
                       <p className="mt-2 font-semibold">
-                        {formatStatus(application.status)}
+                        {formatStatus(
+                          application.status
+                        )}
                       </p>
 
                       <p className="mt-1 text-sm text-slate-500">
@@ -356,7 +474,10 @@ const Applicants = () => {
                     </div>
                   </div>
 
-                  {/* Cover Letter */}
+                  {/* ==================================
+                      COVER LETTER
+                  ================================== */}
+
                   {application.coverLetter && (
                     <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-5">
                       <p className="text-sm font-medium text-slate-400">
@@ -368,6 +489,7 @@ const Applicants = () => {
                       </p>
                     </div>
                   )}
+
                 </div>
               );
             })}

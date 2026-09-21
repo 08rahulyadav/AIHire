@@ -21,14 +21,18 @@ import { getMyApplicationStats } from "../../services/applicationService";
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [resume, setResume] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const [applicationStats, setApplicationStats] = useState({
-    total: 0,
-    pending: 0,
+    totalApplications: 0,
+    applied: 0,
     shortlisted: 0,
+    interview: 0,
+    selected: 0,
     rejected: 0,
+    withdrawn: 0,
   });
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -43,26 +47,75 @@ const Dashboard = () => {
           getMyApplicationStats(),
         ]);
 
+        // ==============================
+        // PROFILE
+        // ==============================
+
         if (profileResponse.status === "fulfilled") {
           setUser(profileResponse.value?.user || null);
         }
 
+        // ==============================
+        // RESUME
+        // ==============================
+
         if (resumeResponse.status === "fulfilled") {
-          setResume(resumeResponse.value?.resume || null);
+          setResume(
+            resumeResponse.value?.resume ||
+              resumeResponse.value?.resumes?.[0] ||
+              null
+          );
         }
 
+        // ==============================
+        // APPLICATION STATS
+        // ==============================
+
         if (statsResponse.status === "fulfilled") {
-          const stats = statsResponse.value || {};
+          const response = statsResponse.value || {};
+
+          // Supports both:
+          // response.stats
+          // and direct response
+          const stats = response.stats || response;
 
           setApplicationStats({
-            total: stats.total ?? stats.totalApplications ?? 0,
-            pending: stats.pending ?? stats.reviewing ?? 0,
-            shortlisted: stats.shortlisted ?? 0,
-            rejected: stats.rejected ?? 0,
+            totalApplications:
+              stats.totalApplications ??
+              stats.total ??
+              stats.totalApplicants ??
+              0,
+
+            applied:
+              stats.applied ??
+              0,
+
+            shortlisted:
+              stats.shortlisted ??
+              0,
+
+            interview:
+              stats.interview ??
+              0,
+
+            selected:
+              stats.selected ??
+              0,
+
+            rejected:
+              stats.rejected ??
+              0,
+
+            withdrawn:
+              stats.withdrawn ??
+              0,
           });
         }
       } catch (error) {
-        console.error("Dashboard data error:", error);
+        console.error(
+          "Dashboard data error:",
+          error
+        );
 
         toast.error(
           error.response?.data?.message ||
@@ -75,6 +128,10 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  // ==============================
+  // LOADING
+  // ==============================
 
   if (loading) {
     return (
@@ -96,7 +153,11 @@ const Dashboard = () => {
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* Welcome Section */}
+
+        {/* ==============================
+            WELCOME
+        ============================== */}
+
         <div className="mb-8">
           <p className="text-sm font-medium text-blue-400">
             Candidate Dashboard
@@ -111,11 +172,18 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* ==============================
+            TOP STATS
+        ============================== */}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+          {/* Resume Status */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">Resume</p>
+              <p className="text-sm text-slate-400">
+                Resume
+              </p>
 
               {resumeUploaded ? (
                 <FiCheckCircle className="text-xl text-green-400" />
@@ -125,7 +193,9 @@ const Dashboard = () => {
             </div>
 
             <h2 className="mt-4 text-xl font-bold sm:text-2xl">
-              {resumeUploaded ? "Uploaded" : "Not Uploaded"}
+              {resumeUploaded
+                ? "Uploaded"
+                : "Not Uploaded"}
             </h2>
 
             <p className="mt-2 truncate text-sm text-slate-500">
@@ -134,6 +204,7 @@ const Dashboard = () => {
             </p>
           </div>
 
+          {/* Resume Score */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-400">
@@ -152,6 +223,7 @@ const Dashboard = () => {
             </p>
           </div>
 
+          {/* Applications */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-400">
@@ -162,7 +234,7 @@ const Dashboard = () => {
             </div>
 
             <h2 className="mt-4 text-xl font-bold sm:text-2xl">
-              {applicationStats.total}
+              {applicationStats.totalApplications}
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
@@ -170,6 +242,7 @@ const Dashboard = () => {
             </p>
           </div>
 
+          {/* Shortlisted */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-400">
@@ -189,10 +262,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Main Cards */}
+        {/* ==============================
+            MAIN CARDS
+        ============================== */}
+
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
+
           {/* Resume Analysis */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6 lg:col-span-2">
+
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">
@@ -209,12 +287,15 @@ const Dashboard = () => {
 
             {resumeUploaded ? (
               <div className="mt-6 rounded-xl border border-slate-700 bg-slate-800/40 p-5 sm:p-6">
+
                 <div className="flex items-start gap-4">
+
                   <div className="rounded-lg bg-blue-500/10 p-3">
                     <FiFileText className="text-2xl text-blue-400" />
                   </div>
 
                   <div className="min-w-0">
+
                     <p className="truncate font-semibold">
                       {resume.fileName}
                     </p>
@@ -222,10 +303,12 @@ const Dashboard = () => {
                     <p className="mt-1 text-sm text-slate-500">
                       Resume uploaded and analyzed successfully.
                     </p>
+
                   </div>
                 </div>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
+
                   <div className="rounded-lg bg-slate-900 p-4">
                     <p className="text-sm text-slate-500">
                       AI Score
@@ -245,6 +328,7 @@ const Dashboard = () => {
                       {resume.skills?.length || 0}
                     </p>
                   </div>
+
                 </div>
 
                 <Link
@@ -257,6 +341,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="mt-6 rounded-xl border border-dashed border-slate-700 bg-slate-800/40 p-8 text-center">
+
                 <FiFileText className="mx-auto text-4xl text-slate-500" />
 
                 <h3 className="mt-4 font-semibold">
@@ -275,17 +360,24 @@ const Dashboard = () => {
                   Upload Resume
                   <FiArrowRight />
                 </Link>
+
               </div>
             )}
           </div>
 
-          {/* Quick Actions */}
+          {/* ==============================
+              QUICK ACTIONS
+          ============================== */}
+
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+
             <h2 className="text-xl font-semibold">
               Quick Actions
             </h2>
 
             <div className="mt-5 space-y-3">
+
+              {/* Find Jobs */}
               <Link
                 to="/candidate/jobs"
                 className="flex items-center justify-between rounded-xl bg-slate-800 p-4 transition hover:bg-slate-700"
@@ -298,6 +390,7 @@ const Dashboard = () => {
                 <FiArrowRight />
               </Link>
 
+              {/* My Resume */}
               <Link
                 to="/candidate/resume"
                 className="flex items-center justify-between rounded-xl bg-slate-800 p-4 transition hover:bg-slate-700"
@@ -310,6 +403,7 @@ const Dashboard = () => {
                 <FiArrowRight />
               </Link>
 
+              {/* My Applications */}
               <Link
                 to="/candidate/applications"
                 className="flex items-center justify-between rounded-xl bg-slate-800 p-4 transition hover:bg-slate-700"
@@ -322,6 +416,7 @@ const Dashboard = () => {
                 <FiArrowRight />
               </Link>
 
+              {/* My Profile */}
               <Link
                 to="/candidate/profile"
                 className="flex items-center justify-between rounded-xl bg-slate-800 p-4 transition hover:bg-slate-700"
@@ -334,6 +429,7 @@ const Dashboard = () => {
                 <FiArrowRight />
               </Link>
 
+              {/* AI Assistant */}
               <Link
                 to="/candidate/ai-assistant"
                 className="flex w-full items-center justify-between rounded-xl bg-slate-800 p-4 text-left transition hover:bg-slate-700"
@@ -346,6 +442,7 @@ const Dashboard = () => {
                 <FiArrowRight />
               </Link>
 
+              {/* Notifications */}
               <Link
                 to="/candidate/notifications"
                 className="flex w-full items-center justify-between rounded-xl bg-slate-800 p-4 text-left transition hover:bg-slate-700"
@@ -357,13 +454,19 @@ const Dashboard = () => {
 
                 <FiArrowRight />
               </Link>
+
             </div>
           </div>
         </div>
 
-        {/* Application Summary */}
+        {/* ==============================
+            APPLICATION SUMMARY
+        ============================== */}
+
         <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+
           <div className="flex items-center justify-between">
+
             <div>
               <h2 className="text-xl font-semibold">
                 Application Summary
@@ -377,28 +480,35 @@ const Dashboard = () => {
             <FiSend className="text-2xl text-purple-400" />
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+            {/* Applied */}
             <div className="rounded-xl bg-slate-800/70 p-4">
               <div className="flex items-center gap-3">
+
                 <FiClock className="text-yellow-400" />
 
                 <p className="text-sm text-slate-400">
-                  Pending
+                  Applied
                 </p>
+
               </div>
 
               <p className="mt-3 text-2xl font-bold">
-                {applicationStats.pending}
+                {applicationStats.applied}
               </p>
             </div>
 
+            {/* Shortlisted */}
             <div className="rounded-xl bg-slate-800/70 p-4">
               <div className="flex items-center gap-3">
-                <FiCheckCircle className="text-green-400" />
+
+                <FiCheckCircle className="text-blue-400" />
 
                 <p className="text-sm text-slate-400">
                   Shortlisted
                 </p>
+
               </div>
 
               <p className="mt-3 text-2xl font-bold">
@@ -406,19 +516,74 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Interview */}
             <div className="rounded-xl bg-slate-800/70 p-4">
               <div className="flex items-center gap-3">
+
+                <FiClock className="text-purple-400" />
+
+                <p className="text-sm text-slate-400">
+                  Interview
+                </p>
+
+              </div>
+
+              <p className="mt-3 text-2xl font-bold">
+                {applicationStats.interview}
+              </p>
+            </div>
+
+            {/* Selected */}
+            <div className="rounded-xl bg-slate-800/70 p-4">
+              <div className="flex items-center gap-3">
+
+                <FiCheckCircle className="text-green-400" />
+
+                <p className="text-sm text-slate-400">
+                  Selected
+                </p>
+
+              </div>
+
+              <p className="mt-3 text-2xl font-bold">
+                {applicationStats.selected}
+              </p>
+            </div>
+
+            {/* Rejected */}
+            <div className="rounded-xl bg-slate-800/70 p-4">
+              <div className="flex items-center gap-3">
+
                 <FiXCircle className="text-red-400" />
 
                 <p className="text-sm text-slate-400">
                   Rejected
                 </p>
+
               </div>
 
               <p className="mt-3 text-2xl font-bold">
                 {applicationStats.rejected}
               </p>
             </div>
+
+            {/* Withdrawn */}
+            <div className="rounded-xl bg-slate-800/70 p-4">
+              <div className="flex items-center gap-3">
+
+                <FiXCircle className="text-slate-400" />
+
+                <p className="text-sm text-slate-400">
+                  Withdrawn
+                </p>
+
+              </div>
+
+              <p className="mt-3 text-2xl font-bold">
+                {applicationStats.withdrawn}
+              </p>
+            </div>
+
           </div>
 
           <Link
@@ -428,15 +593,22 @@ const Dashboard = () => {
             View All Applications
             <FiArrowRight />
           </Link>
+
         </div>
 
-        {/* Account Information */}
+        {/* ==============================
+            ACCOUNT INFORMATION
+        ============================== */}
+
         <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+
           <h2 className="text-xl font-semibold">
             Account Information
           </h2>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
+
+            {/* Name */}
             <div>
               <p className="text-sm text-slate-500">
                 Name
@@ -447,6 +619,7 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Email */}
             <div>
               <p className="text-sm text-slate-500">
                 Email
@@ -457,6 +630,7 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Role */}
             <div>
               <p className="text-sm text-slate-500">
                 Role
@@ -466,8 +640,10 @@ const Dashboard = () => {
                 {user?.role || "candidate"}
               </p>
             </div>
+
           </div>
         </div>
+
       </main>
     </div>
   );

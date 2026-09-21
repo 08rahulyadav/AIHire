@@ -1,11 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiLogOut, FiBriefcase, FiPlusCircle } from "react-icons/fi";
+import {
+  FiUser,
+  FiLogOut,
+  FiBriefcase,
+  FiPlusCircle,
+  FiMessageCircle,
+  FiStar,
+} from "react-icons/fi";
 import toast from "react-hot-toast";
 
 const Navbar = () => {
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = JSON.parse(
+    localStorage.getItem("user") || "null"
+  );
 
   const role = user?.role?.toLowerCase();
 
@@ -26,7 +35,11 @@ const Navbar = () => {
 
         {/* Logo */}
         <Link
-          to={isRecruiter ? "/recruiter/dashboard" : "/candidate/dashboard"}
+          to={
+            isRecruiter
+              ? "/recruiter/dashboard"
+              : "/candidate/dashboard"
+          }
           className="text-2xl font-bold text-blue-500"
         >
           AIHire
@@ -71,6 +84,15 @@ const Navbar = () => {
                 <FiUser />
                 Applicants
               </Link>
+
+              {/* Messages */}
+              <Link
+                to="/direct-chat"
+                className="flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"
+              >
+                <FiMessageCircle />
+                Messages
+              </Link>
             </>
           ) : (
             <>
@@ -90,12 +112,30 @@ const Navbar = () => {
                 Jobs
               </Link>
 
+              {/* AI Job Recommendations */}
+              <Link
+                to="/candidate/recommendations"
+                className="flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"
+              >
+                <FiStar />
+                AI Jobs
+              </Link>
+
               {/* Applications */}
               <Link
                 to="/candidate/applications"
                 className="text-sm text-slate-300 transition hover:text-white"
               >
                 Applications
+              </Link>
+
+              {/* Messages */}
+              <Link
+                to="/direct-chat"
+                className="flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"
+              >
+                <FiMessageCircle />
+                Messages
               </Link>
 
               {/* Profile */}
@@ -118,7 +158,6 @@ const Navbar = () => {
             <FiLogOut />
             Logout
           </button>
-
         </div>
       </div>
     </nav>

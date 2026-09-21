@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import {
   FiBriefcase,
   FiUsers,
   FiPlusCircle,
   FiArrowRight,
   FiRefreshCw,
+  FiMessageCircle,
 } from "react-icons/fi";
 
 import axios from "../../services/axios";
@@ -26,14 +28,14 @@ function RecruiterDashboard() {
   const getRecruiterName = () => {
     try {
       const user = JSON.parse(
-        localStorage.getItem("user")
+        localStorage.getItem("user") || "null"
       );
 
       if (user?.name) {
         setRecruiterName(user.name);
       }
-    } catch (err) {
-      console.error("User data error:", err);
+    } catch (error) {
+      console.error("User data error:", error);
     }
   };
 
@@ -42,32 +44,26 @@ function RecruiterDashboard() {
       setLoading(true);
       setError("");
 
-      const [jobsResponse, applicationsResponse] =
-        await Promise.all([
-          axios.get("/jobs/recruiter/my-jobs"),
-          axios.get("/applications/recruiter/stats"),
-        ]);
+      const response = await axios.get(
+        "/applications/recruiter/stats"
+      );
 
-      const jobs =
-        jobsResponse.data?.jobs || [];
-
-      const applicationStats =
-        applicationsResponse.data?.stats || {};
+      const data = response.data?.stats || {};
 
       setStats({
-        totalJobs: jobs.length,
+        totalJobs: data.totalJobs || 0,
         totalApplicants:
-          applicationStats.totalApplicants || 0,
-        activeJobs: jobs.length,
+          data.totalApplicants || 0,
+        activeJobs: data.totalJobs || 0,
       });
-    } catch (err) {
+    } catch (error) {
       console.error(
         "Recruiter Dashboard Error:",
-        err.response?.data || err.message
+        error.response?.data || error.message
       );
 
       setError(
-        err.response?.data?.message ||
+        error.response?.data?.message ||
           "Unable to load dashboard data."
       );
     } finally {
@@ -82,19 +78,21 @@ function RecruiterDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* Welcome */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+
+        {/* HEADER */}
+
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm font-medium text-blue-400">
               Recruiter Dashboard
             </p>
 
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+            <h1 className="mt-2 text-3xl font-bold">
               Welcome, {recruiterName} 👋
             </h1>
 
-            <p className="mt-2 text-sm text-slate-400 sm:text-base">
+            <p className="mt-2 text-slate-400">
               Manage your jobs, applicants and hiring
               process from here.
             </p>
@@ -104,36 +102,33 @@ function RecruiterDashboard() {
             type="button"
             onClick={fetchDashboardStats}
             disabled={loading}
-            className="flex w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-blue-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50"
           >
             <FiRefreshCw
-              className={loading ? "animate-spin" : ""}
+              className={
+                loading ? "animate-spin" : ""
+              }
             />
+
             Refresh
           </button>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-300">
-            <span>{error}</span>
+        {/* ERROR */}
 
-            <button
-              type="button"
-              onClick={fetchDashboardStats}
-              className="font-semibold text-red-200 underline"
-            >
-              Retry
-            </button>
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-900 bg-red-950/40 p-4 text-red-300">
+            {error}
           </div>
         )}
 
-        {/* Stats */}
+        {/* STATS */}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Total Jobs */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <div className="flex justify-between">
+              <p className="text-slate-400">
                 Total Jobs
               </p>
 
@@ -149,10 +144,9 @@ function RecruiterDashboard() {
             </p>
           </div>
 
-          {/* Total Applicants */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <div className="flex justify-between">
+              <p className="text-slate-400">
                 Total Applicants
               </p>
 
@@ -160,7 +154,9 @@ function RecruiterDashboard() {
             </div>
 
             <h2 className="mt-4 text-3xl font-bold">
-              {loading ? "..." : stats.totalApplicants}
+              {loading
+                ? "..."
+                : stats.totalApplicants}
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
@@ -168,10 +164,9 @@ function RecruiterDashboard() {
             </p>
           </div>
 
-          {/* Active Jobs */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <div className="flex justify-between">
+              <p className="text-slate-400">
                 Active Jobs
               </p>
 
@@ -188,72 +183,75 @@ function RecruiterDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* QUICK ACTIONS */}
+
         <div className="mt-8">
           <h2 className="text-xl font-semibold">
             Quick Actions
           </h2>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* My Jobs */}
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
             <Link
               to="/recruiter/jobs"
-              className="rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-blue-500 hover:bg-slate-800 sm:p-6"
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-blue-500"
             >
-              <div className="flex items-center justify-between">
-                <FiBriefcase className="text-2xl text-blue-400" />
+              <FiBriefcase className="text-2xl text-blue-400" />
 
-                <FiArrowRight className="text-slate-500" />
-              </div>
-
-              <h3 className="mt-5 text-lg font-semibold">
+              <h3 className="mt-5 font-semibold">
                 My Jobs
               </h3>
 
               <p className="mt-2 text-sm text-slate-400">
-                View and manage your posted jobs.
+                Manage your posted jobs.
               </p>
             </Link>
 
-            {/* Create Job */}
             <Link
               to="/recruiter/create-job"
-              className="rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-green-500 hover:bg-slate-800 sm:p-6"
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-green-500"
             >
-              <div className="flex items-center justify-between">
-                <FiPlusCircle className="text-2xl text-green-400" />
+              <FiPlusCircle className="text-2xl text-green-400" />
 
-                <FiArrowRight className="text-slate-500" />
-              </div>
-
-              <h3 className="mt-5 text-lg font-semibold">
+              <h3 className="mt-5 font-semibold">
                 Create Job
               </h3>
 
               <p className="mt-2 text-sm text-slate-400">
-                Post a new job vacancy.
+                Post a new vacancy.
               </p>
             </Link>
 
-            {/* Applicants */}
             <Link
               to="/recruiter/applications"
-              className="rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:border-purple-500 hover:bg-slate-800 sm:p-6"
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-purple-500"
             >
-              <div className="flex items-center justify-between">
-                <FiUsers className="text-2xl text-purple-400" />
+              <FiUsers className="text-2xl text-purple-400" />
 
-                <FiArrowRight className="text-slate-500" />
-              </div>
-
-              <h3 className="mt-5 text-lg font-semibold">
+              <h3 className="mt-5 font-semibold">
                 Applicants
               </h3>
 
               <p className="mt-2 text-sm text-slate-400">
-                View candidates who applied for your jobs.
+                View candidates.
               </p>
             </Link>
+
+            <Link
+              to="/direct-chat"
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-blue-500"
+            >
+              <FiMessageCircle className="text-2xl text-blue-400" />
+
+              <h3 className="mt-5 font-semibold">
+                Messages
+              </h3>
+
+              <p className="mt-2 text-sm text-slate-400">
+                Chat with candidates.
+              </p>
+            </Link>
+
           </div>
         </div>
       </main>

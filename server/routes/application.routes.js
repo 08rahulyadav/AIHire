@@ -3,6 +3,7 @@ import express from "express";
 import {
   applyForJob,
   getMyApplications,
+  getApplicationById,
   getRecruiterApplications,
   updateApplicationStatus,
   getCandidateApplicationStats,
@@ -16,15 +17,19 @@ import roleMiddleware from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Apply for a job - candidate only
+// ======================================================
+// CANDIDATE ROUTES
+// ======================================================
+
+// Apply for a job
 router.post(
-  "/",
+  "/:jobId",
   authMiddleware,
   roleMiddleware("candidate"),
   applyForJob
 );
 
-// Get candidate's applications
+// Get candidate applications
 router.get(
   "/my",
   authMiddleware,
@@ -32,31 +37,35 @@ router.get(
   getMyApplications
 );
 
-// Get candidate application statistics
+// Candidate statistics
 router.get(
-  "/my/stats",
+  "/candidate/stats",
   authMiddleware,
   roleMiddleware("candidate"),
   getCandidateApplicationStats
 );
 
-// Get candidate's recent applications
+// Candidate recent applications
 router.get(
-  "/my/recent",
+  "/candidate/recent",
   authMiddleware,
   roleMiddleware("candidate"),
   getRecentCandidateApplications
 );
 
-// Get recruiter's applications
+// ======================================================
+// RECRUITER ROUTES
+// ======================================================
+
+// Get all recruiter applications
 router.get(
-  "/recruiter",
+  "/recruiter/all",
   authMiddleware,
   roleMiddleware("recruiter"),
   getRecruiterApplications
 );
 
-// Get recruiter application statistics
+// Recruiter statistics
 router.get(
   "/recruiter/stats",
   authMiddleware,
@@ -64,7 +73,7 @@ router.get(
   getRecruiterApplicationStats
 );
 
-// Get recruiter's recent applications
+// Recruiter recent applications
 router.get(
   "/recruiter/recent",
   authMiddleware,
@@ -72,12 +81,24 @@ router.get(
   getRecentRecruiterApplications
 );
 
-// Update application status - recruiter only
+// Update application status
 router.patch(
-  "/:applicationId/status",
+  "/recruiter/:applicationId/status",
   authMiddleware,
   roleMiddleware("recruiter"),
   updateApplicationStatus
+);
+
+// ======================================================
+// SINGLE APPLICATION
+// KEEP THIS LAST
+// ======================================================
+
+router.get(
+  "/:applicationId",
+  authMiddleware,
+  roleMiddleware("candidate"),
+  getApplicationById
 );
 
 export default router;

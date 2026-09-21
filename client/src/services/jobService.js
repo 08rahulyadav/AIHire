@@ -1,16 +1,13 @@
 import axios from "./axios";
 
 // ==========================================
-// GET ALL JOBS - CANDIDATE
+// GET ALL JOBS
 // ==========================================
 
 const getJobs = async (params = {}) => {
-  const response = await axios.get(
-    "/jobs",
-    {
-      params,
-    }
-  );
+  const response = await axios.get("/jobs", {
+    params,
+  });
 
   return response.data;
 };
@@ -20,9 +17,7 @@ const getJobs = async (params = {}) => {
 // ==========================================
 
 const getMyJobs = async () => {
-  const response = await axios.get(
-    "/jobs/my"
-  );
+  const response = await axios.get("/jobs/my");
 
   return response.data;
 };
@@ -40,7 +35,7 @@ const getJobById = async (jobId) => {
 };
 
 // ==========================================
-// CREATE JOB - RECRUITER
+// CREATE JOB
 // ==========================================
 
 const createJob = async (jobData) => {
@@ -53,13 +48,10 @@ const createJob = async (jobData) => {
 };
 
 // ==========================================
-// UPDATE JOB - RECRUITER
+// UPDATE JOB
 // ==========================================
 
-const updateJob = async (
-  jobId,
-  jobData
-) => {
+const updateJob = async (jobId, jobData) => {
   const response = await axios.put(
     `/jobs/${jobId}`,
     jobData
@@ -69,7 +61,7 @@ const updateJob = async (
 };
 
 // ==========================================
-// DELETE JOB - RECRUITER
+// DELETE JOB
 // ==========================================
 
 const deleteJob = async (jobId) => {
