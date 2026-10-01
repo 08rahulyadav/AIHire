@@ -65,10 +65,7 @@ const AiAssistant = () => {
             item._id ||
             `${item.role}-${item.createdAt || Date.now()}-${index}`,
 
-          sender:
-            item.role === "user"
-              ? "user"
-              : "ai",
+          sender: item.role === "user" ? "user" : "ai",
 
           text: item.message,
         }));
@@ -79,15 +76,10 @@ const AiAssistant = () => {
             : [welcomeMessage]
         );
       } catch (error) {
-        console.error(
-          "Chat history error:",
-          error
-        );
+        console.error("Chat history error:", error);
 
         if (error.response?.status !== 401) {
-          toast.error(
-            "Unable to load chat history"
-          );
+          toast.error("Unable to load chat history");
         }
       } finally {
         setIsHistoryLoading(false);
@@ -116,8 +108,7 @@ const AiAssistant = () => {
     try {
       window.speechSynthesis.cancel();
 
-      const utterance =
-        new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = "en-US";
       utterance.rate = 1;
@@ -136,14 +127,9 @@ const AiAssistant = () => {
         setIsSpeaking(false);
       };
 
-      window.speechSynthesis.speak(
-        utterance
-      );
+      window.speechSynthesis.speak(utterance);
     } catch (error) {
-      console.error(
-        "Speech synthesis error:",
-        error
-      );
+      console.error("Speech synthesis error:", error);
 
       setIsSpeaking(false);
     }
@@ -197,13 +183,12 @@ const AiAssistant = () => {
     setIsLoading(true);
 
     try {
-      const response =
-        await axiosInstance.post(
-          "/ai/chat",
-          {
-            message: trimmedMessage,
-          }
-        );
+      const response = await axiosInstance.post(
+        "/ai/chat",
+        {
+          message: trimmedMessage,
+        }
+      );
 
       const reply =
         response.data?.reply ||
@@ -220,15 +205,11 @@ const AiAssistant = () => {
         aiMessage,
       ]);
 
-      // Speak Gemini response
       if (speakResponse) {
         speakText(reply);
       }
     } catch (error) {
-      console.error(
-        "AI Assistant error:",
-        error
-      );
+      console.error("AI Assistant error:", error);
 
       const errorMessage = {
         id: `error-${Date.now()}`,
@@ -243,9 +224,7 @@ const AiAssistant = () => {
         errorMessage,
       ]);
 
-      toast.error(
-        "Unable to get AI response"
-      );
+      toast.error("Unable to get AI response");
     } finally {
       setIsLoading(false);
     }
@@ -258,10 +237,7 @@ const AiAssistant = () => {
   const handleSendMessage = async (event) => {
     event.preventDefault();
 
-    await sendMessageToAI(
-      message,
-      false
-    );
+    await sendMessageToAI(message, false);
   };
 
   // ==========================================
@@ -273,9 +249,7 @@ const AiAssistant = () => {
       return;
     }
 
-    if (
-      typeof window === "undefined"
-    ) {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -291,10 +265,8 @@ const AiAssistant = () => {
       return;
     }
 
-    // Stop existing speech
     stopSpeaking();
 
-    // If already listening, stop it
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -303,8 +275,7 @@ const AiAssistant = () => {
       }
     }
 
-    const recognition =
-      new SpeechRecognition();
+    const recognition = new SpeechRecognition();
 
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -327,9 +298,7 @@ const AiAssistant = () => {
         const transcript =
           event.results[i][0].transcript;
 
-        if (
-          event.results[i].isFinal
-        ) {
+        if (event.results[i].isFinal) {
           finalTranscript += transcript;
         } else {
           interimTranscript += transcript;
@@ -337,13 +306,10 @@ const AiAssistant = () => {
       }
 
       const currentText =
-        finalTranscript ||
-        interimTranscript;
+        finalTranscript || interimTranscript;
 
       setMessage(currentText);
 
-      // When final speech is received,
-      // send it to Gemini automatically.
       if (finalTranscript.trim()) {
         sendMessageToAI(
           finalTranscript.trim(),
@@ -360,15 +326,11 @@ const AiAssistant = () => {
 
       setIsListening(false);
 
-      if (
-        event.error === "not-allowed"
-      ) {
+      if (event.error === "not-allowed") {
         toast.error(
           "Microphone permission was denied."
         );
-      } else if (
-        event.error === "no-speech"
-      ) {
+      } else if (event.error === "no-speech") {
         toast.error(
           "No speech detected. Please try again."
         );
@@ -384,8 +346,7 @@ const AiAssistant = () => {
       recognitionRef.current = null;
     };
 
-    recognitionRef.current =
-      recognition;
+    recognitionRef.current = recognition;
 
     try {
       recognition.start();
@@ -439,11 +400,13 @@ const AiAssistant = () => {
     if (voiceEnabled) {
       stopSpeaking();
       setVoiceEnabled(false);
+
       toast.success(
         "AI voice response turned off"
       );
     } else {
       setVoiceEnabled(true);
+
       toast.success(
         "AI voice response turned on"
       );
@@ -462,10 +425,9 @@ const AiAssistant = () => {
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to clear your chat history?"
-      );
+    const confirmed = window.confirm(
+      "Are you sure you want to clear your chat history?"
+    );
 
     if (!confirmed) {
       return;
@@ -479,10 +441,7 @@ const AiAssistant = () => {
         "/ai/history"
       );
 
-      setMessages([
-        welcomeMessage,
-      ]);
-
+      setMessages([welcomeMessage]);
       setMessage("");
 
       toast.success(
@@ -530,11 +489,10 @@ const AiAssistant = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <main className="mx-auto flex max-w-5xl flex-col px-4 py-6 sm:px-6">
-
         {/* HEADER */}
 
         <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2 text-blue-400">
               <FiMessageCircle className="text-xl" />
 
@@ -543,11 +501,11 @@ const AiAssistant = () => {
               </span>
             </div>
 
-            <h1 className="text-2xl font-bold sm:text-3xl">
+            <h1 className="wrap-break-word text-2xl font-bold sm:text-3xl">
               AI Assistant
             </h1>
 
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
               Get guidance about resumes, jobs,
               interviews, and career growth.
             </p>
@@ -560,7 +518,7 @@ const AiAssistant = () => {
               isLoading ||
               messages.length <= 1
             }
-            className="flex items-center gap-2 rounded-lg border border-red-500/30 px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-red-500/30 px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <FiTrash2 />
 
@@ -572,18 +530,17 @@ const AiAssistant = () => {
 
         {/* CHAT BOX */}
 
-        <div className="flex min-h-[600px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-
+        <div className="flex min-h-150 max-h-170 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 sm:h-150">
           {/* CHAT HEADER */}
 
-          <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4 sm:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
                 <FiCpu className="text-xl text-blue-400" />
               </div>
 
-              <div>
-                <h2 className="font-semibold">
+              <div className="min-w-0">
+                <h2 className="truncate font-semibold">
                   AI Career Assistant
                 </h2>
 
@@ -599,19 +556,17 @@ const AiAssistant = () => {
               </div>
             </div>
 
-            {/* VOICE OUTPUT BUTTON */}
+            {/* VOICE OUTPUT */}
 
             <button
               type="button"
-              onClick={
-                toggleVoiceOutput
-              }
+              onClick={toggleVoiceOutput}
               title={
                 voiceEnabled
                   ? "Turn AI voice off"
                   : "Turn AI voice on"
               }
-              className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
                 voiceEnabled
                   ? "border-blue-500/40 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
                   : "border-slate-700 bg-slate-800 text-slate-500 hover:bg-slate-700"
@@ -627,7 +582,7 @@ const AiAssistant = () => {
 
           {/* MESSAGES */}
 
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-5">
             {isHistoryLoading ? (
               <div className="flex items-center justify-center py-10 text-sm text-slate-400">
                 Loading chat history...
@@ -642,17 +597,15 @@ const AiAssistant = () => {
                       : "justify-start"
                   }`}
                 >
-                  {item.sender ===
-                    "ai" && (
+                  {item.sender === "ai" && (
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
                       <FiCpu className="text-blue-400" />
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
-                      item.sender ===
-                      "user"
+                    className={`max-w-[80%] wrap-break-word whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
+                      item.sender === "user"
                         ? "rounded-br-sm bg-blue-600 text-white"
                         : "rounded-bl-sm bg-slate-800 text-slate-200"
                     }`}
@@ -660,8 +613,7 @@ const AiAssistant = () => {
                     {item.text}
                   </div>
 
-                  {item.sender ===
-                    "user" && (
+                  {item.sender === "user" && (
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800">
                       <FiUser className="text-slate-300" />
                     </div>
@@ -688,22 +640,17 @@ const AiAssistant = () => {
           {/* INPUT */}
 
           <form
-            onSubmit={
-              handleSendMessage
-            }
-            className="border-t border-slate-800 p-4"
+            onSubmit={handleSendMessage}
+            className="border-t border-slate-800 p-3 sm:p-4"
           >
-            <div className="flex items-center gap-3">
-
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* TEXT INPUT */}
 
               <input
                 type="text"
                 value={message}
                 onChange={(event) =>
-                  setMessage(
-                    event.target.value
-                  )
+                  setMessage(event.target.value)
                 }
                 placeholder={
                   isListening
@@ -714,16 +661,14 @@ const AiAssistant = () => {
                   isLoading ||
                   isHistoryLoading
                 }
-                className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-3 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
               />
 
-              {/* MIC BUTTON */}
+              {/* MIC */}
 
               <button
                 type="button"
-                onClick={
-                  handleVoiceButton
-                }
+                onClick={handleVoiceButton}
                 disabled={
                   isLoading ||
                   isHistoryLoading
@@ -733,11 +678,11 @@ const AiAssistant = () => {
                     ? "Stop listening"
                     : "Speak to AI"
                 }
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition sm:h-12 sm:w-12 ${
                   isListening
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-purple-600 hover:bg-purple-700"
-                }`}
+                } disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {isListening ? (
                   <FiMicOff className="text-lg" />
@@ -746,7 +691,7 @@ const AiAssistant = () => {
                 )}
               </button>
 
-              {/* SEND BUTTON */}
+              {/* SEND */}
 
               <button
                 type="submit"
@@ -755,18 +700,18 @@ const AiAssistant = () => {
                   isLoading ||
                   isHistoryLoading
                 }
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 sm:h-12 sm:w-12 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FiSend />
               </button>
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
+            <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <p className="text-[11px] text-slate-500 sm:text-xs">
                 Your chat history is saved automatically.
               </p>
 
-              <p className="text-xs text-slate-500">
+              <p className="text-[11px] text-slate-500 sm:text-xs">
                 {isListening
                   ? "🎙️ Listening..."
                   : isSpeaking

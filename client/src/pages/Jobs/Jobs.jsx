@@ -82,30 +82,32 @@ const Jobs = () => {
   }, [search, location, jobType, jobs]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <main className="mx-auto max-w-7xl px-6 py-10">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
+      <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+
         {/* Header */}
-        <div className="mb-8">
-          <p className="mb-2 text-sm font-medium text-blue-400">
+        <div className="mb-6 sm:mb-8">
+          <p className="mb-2 text-sm font-semibold text-blue-400">
             Find Your Next Opportunity
           </p>
 
-          <h1 className="text-3xl font-bold md:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
             Explore Jobs
           </h1>
 
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
             Find jobs that match your skills and career goals.
           </p>
         </div>
 
         {/* Search / Filters */}
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div className="grid gap-4 md:grid-cols-3">
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-sm sm:mb-8 sm:p-5">
+          <div className="grid gap-3 md:grid-cols-3 md:gap-4">
+
             {/* Search */}
             <div className="relative">
               <FiSearch
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
                 size={18}
               />
 
@@ -114,14 +116,14 @@ const Jobs = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search jobs or companies..."
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
               />
             </div>
 
             {/* Location */}
             <div className="relative">
               <FiMapPin
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
                 size={18}
               />
 
@@ -130,7 +132,7 @@ const Jobs = () => {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Location"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
               />
             </div>
 
@@ -138,7 +140,7 @@ const Jobs = () => {
             <select
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
-              className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
             >
               <option value="">All Job Types</option>
               <option value="full-time">Full Time</option>
@@ -151,17 +153,19 @@ const Jobs = () => {
         </div>
 
         {/* Results Count */}
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Available Jobs</h2>
+        <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold">
+            Available Jobs
+          </h2>
 
-          <span className="text-sm text-slate-500">
+          <span className="w-fit rounded-full bg-slate-900 px-3 py-1 text-xs text-slate-400 sm:text-sm">
             {filteredJobs.length} jobs found
           </span>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-12 text-center">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-10 text-center sm:p-12">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
 
             <p className="text-sm text-slate-400">
@@ -172,17 +176,16 @@ const Jobs = () => {
 
         {/* No Jobs */}
         {!loading && filteredJobs.length === 0 && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-12 text-center">
-            <FiBriefcase
-              size={40}
-              className="mx-auto mb-4 text-slate-600"
-            />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-10 text-center sm:p-12">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800 text-slate-600">
+              <FiBriefcase size={28} />
+            </div>
 
             <h3 className="text-lg font-semibold">
               No jobs found
             </h3>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               Try changing your search or filters.
             </p>
           </div>
@@ -190,72 +193,81 @@ const Jobs = () => {
 
         {/* Job List */}
         {!loading && filteredJobs.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-5">
             {filteredJobs.map((job) => (
               <div
                 key={job._id}
-                className="group rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:-translate-y-1 hover:border-blue-500/40 hover:bg-slate-900/80"
+                className="group flex min-w-0 flex-col rounded-2xl border border-slate-800 bg-slate-900 p-4 transition hover:-translate-y-0.5 hover:border-blue-500/40 hover:bg-slate-900/80 sm:p-6"
               >
                 {/* Job Header */}
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+                <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 sm:h-12 sm:w-12">
                     <FiBriefcase
-                      size={22}
+                      size={21}
                       className="text-blue-400"
                     />
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-white">
+                  <div className="min-w-0">
+                    <h3 className="wrap-break-word font-semibold leading-6 text-white">
                       {job.title || "Untitled Job"}
                     </h3>
 
-                    <p className="mt-1 text-sm text-blue-400">
+                    <p className="wrap-break-word mt-1 text-sm text-blue-400">
                       {job.company || "Company"}
                     </p>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="mt-5 line-clamp-3 text-sm leading-6 text-slate-400">
-                  {job.description || "No job description available."}
+                <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-400 sm:mt-5">
+                  {job.description ||
+                    "No job description available."}
                 </p>
 
                 {/* Job Information */}
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap gap-2 sm:mt-5 sm:gap-3">
                   {job.location && (
-                    <span className="flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                      <FiMapPin />
-                      {job.location}
+                    <span className="flex max-w-full items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
+                      <FiMapPin className="shrink-0" />
+                      <span className="wrap-break-word">
+                        {job.location}
+                      </span>
                     </span>
                   )}
 
                   {(job.jobType || job.type) && (
-                    <span className="flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                      <FiClock />
-                      {job.jobType || job.type}
+                    <span className="flex max-w-full items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
+                      <FiClock className="shrink-0" />
+                      <span className="wrap-break-word">
+                        {job.jobType || job.type}
+                      </span>
                     </span>
                   )}
 
                   {(job.salary || job.salaryRange) && (
-                    <span className="flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                      <FiDollarSign />
-                      {job.salary || job.salaryRange}
+                    <span className="flex max-w-full items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
+                      <FiDollarSign className="shrink-0" />
+                      <span className="wrap-break-word">
+                        {job.salary || job.salaryRange}
+                      </span>
                     </span>
                   )}
                 </div>
 
                 {/* Skills */}
                 {job.skills?.length > 0 && (
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {job.skills.slice(0, 5).map((skill, index) => (
-                      <span
-                        key={index}
-                        className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                  <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
+                    {job.skills
+                      .slice(0, 5)
+                      .map((skill, index) => (
+                        <span
+                          key={index}
+                          className="wrap-break-word rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400"
+                        >
+                          {skill}
+                        </span>
+                      ))}
 
                     {job.skills.length > 5 && (
                       <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-500">
@@ -266,14 +278,14 @@ const Jobs = () => {
                 )}
 
                 {/* Bottom */}
-                <div className="mt-6 flex items-center justify-between border-t border-slate-800 pt-5">
-                  <span className="text-xs text-slate-500">
+                <div className="mt-5 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:pt-5">
+                  <span className="text-xs leading-5 text-slate-500">
                     View complete job details
                   </span>
 
                   <Link
                     to={`/candidate/jobs/${job._id}`}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold transition hover:bg-blue-700"
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-blue-700 sm:w-auto"
                   >
                     View Details
                   </Link>

@@ -10,6 +10,8 @@ import {
   FiExternalLink,
   FiRefreshCw,
   FiMessageCircle,
+  FiMapPin,
+  FiCalendar,
 } from "react-icons/fi";
 
 import {
@@ -163,9 +165,9 @@ const Applicants = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
-        <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="flex min-h-[400px] items-center justify-center">
+      <div className="min-h-screen bg-slate-950 px-4 py-6 text-white sm:px-6 sm:py-8 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex min-h-96 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900">
             <div className="text-center">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
 
@@ -185,27 +187,22 @@ const Applicants = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
 
-        {/* ======================================
-            HEADER
-        ====================================== */}
+        {/* HEADER */}
 
-        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-blue-400">
+        <div className="mb-7 flex flex-col gap-5 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400">
               <FiUsers />
-
-              <span className="text-sm font-medium">
-                Recruiter Applications
-              </span>
+              Recruiter Applications
             </div>
 
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Applicants
             </h1>
 
-            <p className="mt-2 text-slate-400">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
               View and manage candidates who applied
               for your jobs.
             </p>
@@ -214,57 +211,52 @@ const Applicants = () => {
           <button
             type="button"
             onClick={fetchApplicants}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:border-blue-500 hover:bg-slate-800 hover:text-white sm:w-auto"
           >
             <FiRefreshCw />
             Refresh
           </button>
         </div>
 
-        {/* ======================================
-            APPLICANT COUNT
-        ====================================== */}
+        {/* APPLICANT COUNT */}
 
-        <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-500/10 p-3">
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg sm:p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
               <FiUsers className="text-xl text-blue-400" />
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                 Total Applicants
               </p>
 
-              <p className="text-2xl font-bold">
+              <p className="mt-1 text-2xl font-bold text-white">
                 {applicants.length}
               </p>
             </div>
           </div>
         </div>
 
-        {/* ======================================
-            EMPTY STATE
-        ====================================== */}
+        {/* EMPTY STATE */}
 
         {applicants.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-12 text-center">
-            <FiUsers className="mx-auto text-5xl text-slate-600" />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-lg sm:p-12">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800">
+              <FiUsers className="text-3xl text-slate-500" />
+            </div>
 
-            <h2 className="mt-5 text-xl font-semibold">
+            <h2 className="mt-5 text-xl font-semibold text-white">
               No Applicants Found
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
-              No candidates have applied for your
-              jobs yet.
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+              No candidates have applied for your jobs
+              yet.
             </p>
           </div>
         ) : (
-
-          /* ======================================
-             APPLICANTS
-          ====================================== */
+          /* APPLICANTS */
 
           <div className="space-y-5">
             {applicants.map((application) => {
@@ -276,62 +268,57 @@ const Applicants = () => {
                 application.candidate?._id;
 
               return (
-                <div
+                <article
                   key={application._id}
-                  className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
+                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg shadow-black/5 transition hover:border-slate-700 sm:p-6"
                 >
+                  {/* TOP */}
 
-                  {/* ==================================
-                      TOP
-                  ================================== */}
-
-                  <div className="flex flex-col justify-between gap-5 lg:flex-row">
-
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                     {/* CANDIDATE */}
 
-                    <div className="flex gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+                    <div className="flex min-w-0 gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
                         <FiUsers className="text-xl text-blue-400" />
                       </div>
 
-                      <div>
-                        <h2 className="text-xl font-semibold">
+                      <div className="min-w-0">
+                        <h2 className="wrap-break-word text-lg font-semibold text-white sm:text-xl">
                           {application.candidate?.name ||
                             "Unknown Candidate"}
                         </h2>
 
-                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-400">
+                        <div className="mt-3 flex flex-col gap-2 text-sm text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2">
+                          <span className="flex min-w-0 items-start gap-2">
+                            <FiMail className="mt-0.5 shrink-0 text-blue-400" />
 
-                          <span className="flex items-center gap-2">
-                            <FiMail />
-
-                            {application.candidate?.email ||
-                              "No email"}
+                            <span className="wrap-break-word">
+                              {application.candidate
+                                ?.email || "No email"}
+                            </span>
                           </span>
 
-                          <span className="flex items-center gap-2">
-                            <FiBriefcase />
+                          <span className="flex min-w-0 items-start gap-2">
+                            <FiBriefcase className="mt-0.5 shrink-0 text-purple-400" />
 
-                            {application.job?.title ||
-                              "Unknown Job"}
+                            <span className="wrap-break-word">
+                              {application.job?.title ||
+                                "Unknown Job"}
+                            </span>
                           </span>
-
                         </div>
                       </div>
                     </div>
 
-                    {/* ==================================
-                        ACTIONS
-                    ================================== */}
+                    {/* ACTIONS */}
 
-                    <div className="flex flex-wrap items-center gap-3">
-
-                      {/* CHAT BUTTON */}
+                    <div className="grid w-full gap-3 sm:flex sm:flex-wrap xl:w-auto xl:justify-end">
+                      {/* CHAT */}
 
                       {candidateId ? (
                         <Link
                           to={`/direct-chat/${candidateId}`}
-                          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
                           <FiMessageCircle />
                           Chat
@@ -340,7 +327,7 @@ const Applicants = () => {
                         <button
                           type="button"
                           disabled
-                          className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-slate-400"
+                          className="inline-flex min-h-10 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-500"
                         >
                           <FiMessageCircle />
                           Chat unavailable
@@ -350,6 +337,7 @@ const Applicants = () => {
                       {/* STATUS */}
 
                       <select
+                        aria-label="Application status"
                         value={
                           application.status ||
                           "applied"
@@ -364,7 +352,7 @@ const Applicants = () => {
                             event.target.value
                           )
                         }
-                        className={`rounded-lg border px-4 py-2 text-sm font-medium outline-none ${getStatusClass(
+                        className={`min-h-10 w-full rounded-xl border px-4 py-2 text-sm font-semibold outline-none transition sm:w-auto ${getStatusClass(
                           application.status
                         )} disabled:cursor-not-allowed disabled:opacity-60`}
                       >
@@ -391,26 +379,24 @@ const Applicants = () => {
                     </div>
                   </div>
 
-                  {/* ==================================
-                      DETAILS
-                  ================================== */}
+                  {/* DETAILS */}
 
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
 
                     {/* JOB */}
 
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
                         <FiBriefcase />
                         Job
                       </div>
 
-                      <p className="mt-2 font-medium text-white">
+                      <p className="mt-3 wrap-break-word font-semibold text-white">
                         {application.job?.title ||
                           "Not available"}
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 wrap-break-word text-sm text-slate-500">
                         {application.job?.company ||
                           "Company not available"}
                       </p>
@@ -419,19 +405,19 @@ const Applicants = () => {
                     {/* RESUME */}
 
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
                         <FiFileText />
                         Resume
                       </div>
 
-                      <p className="mt-2 truncate font-medium text-white">
+                      <p className="mt-3 wrap-break-word font-semibold text-white">
                         {application.resume?.fileName ||
                           "Resume not available"}
                       </p>
 
                       {application.resume?.score !==
                         undefined && (
-                        <p className="mt-1 text-sm text-blue-400">
+                        <p className="mt-2 text-sm font-medium text-blue-400">
                           AI Score:{" "}
                           {application.resume.score}/100
                         </p>
@@ -442,7 +428,7 @@ const Applicants = () => {
                           href={resumeUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300"
+                          className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-slate-800 hover:text-blue-300"
                         >
                           View Resume
                           <FiExternalLink />
@@ -453,17 +439,24 @@ const Applicants = () => {
                     {/* APPLICATION STATUS */}
 
                     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                      <p className="text-sm text-slate-500">
-                        Application Status
-                      </p>
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+                        <FiCalendar />
+                        Application
+                      </div>
 
-                      <p className="mt-2 font-semibold">
-                        {formatStatus(
-                          application.status
-                        )}
-                      </p>
+                      <div className="mt-3">
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
+                            application.status
+                          )}`}
+                        >
+                          {formatStatus(
+                            application.status
+                          )}
+                        </span>
+                      </div>
 
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-3 text-sm text-slate-500">
                         Applied{" "}
                         {application.createdAt
                           ? new Date(
@@ -474,23 +467,20 @@ const Applicants = () => {
                     </div>
                   </div>
 
-                  {/* ==================================
-                      COVER LETTER
-                  ================================== */}
+                  {/* COVER LETTER */}
 
                   {application.coverLetter && (
-                    <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-5">
-                      <p className="text-sm font-medium text-slate-400">
+                    <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         Cover Letter
                       </p>
 
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">
+                      <p className="mt-3 wrap-break-word whitespace-pre-wrap text-sm leading-6 text-slate-300">
                         {application.coverLetter}
                       </p>
                     </div>
                   )}
-
-                </div>
+                </article>
               );
             })}
           </div>

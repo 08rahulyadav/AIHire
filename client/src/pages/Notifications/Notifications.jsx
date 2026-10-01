@@ -27,58 +27,74 @@ const Notifications = () => {
           response?.data ||
           (Array.isArray(response) ? response : []);
 
-        const generatedNotifications = applications.map((application) => {
-          const status = application.status?.toLowerCase() || "pending";
+        const generatedNotifications = applications.map(
+          (application) => {
+            const status =
+              application.status?.toLowerCase() ||
+              "pending";
 
-          let title = "Application submitted";
-          let message = "Your job application has been submitted.";
-          let icon = <FiFileText className="text-blue-600" />;
-          let bgColor = "bg-blue-50";
+            let title = "Application submitted";
+            let message =
+              "Your job application has been submitted.";
+            let icon = (
+              <FiFileText className="text-blue-600" />
+            );
+            let bgColor = "bg-blue-50";
 
-          if (status === "shortlisted") {
-            title = "Application shortlisted";
-            message = "Congratulations! Your application has been shortlisted.";
-            icon = <FiCheckCircle className="text-green-600" />;
-            bgColor = "bg-green-50";
+            if (status === "shortlisted") {
+              title = "Application shortlisted";
+              message =
+                "Congratulations! Your application has been shortlisted.";
+              icon = (
+                <FiCheckCircle className="text-green-600" />
+              );
+              bgColor = "bg-green-50";
+            }
+
+            if (status === "rejected") {
+              title = "Application rejected";
+              message =
+                "Your application was not selected for this position.";
+              icon = (
+                <FiXCircle className="text-red-600" />
+              );
+              bgColor = "bg-red-50";
+            }
+
+            if (status === "pending") {
+              title = "Application under review";
+              message =
+                "Your application is currently under review.";
+              icon = (
+                <FiClock className="text-yellow-600" />
+              );
+              bgColor = "bg-yellow-50";
+            }
+
+            return {
+              id: application._id || application.id,
+              title,
+              message,
+              status,
+              icon,
+              bgColor,
+              jobTitle:
+                application.job?.title ||
+                application.job?.jobTitle ||
+                application.jobTitle ||
+                "Job Application",
+              company:
+                application.job?.company ||
+                application.job?.companyName ||
+                application.company ||
+                "",
+              createdAt:
+                application.createdAt ||
+                application.appliedAt ||
+                application.updatedAt,
+            };
           }
-
-          if (status === "rejected") {
-            title = "Application rejected";
-            message = "Your application was not selected for this position.";
-            icon = <FiXCircle className="text-red-600" />;
-            bgColor = "bg-red-50";
-          }
-
-          if (status === "pending") {
-            title = "Application under review";
-            message = "Your application is currently under review.";
-            icon = <FiClock className="text-yellow-600" />;
-            bgColor = "bg-yellow-50";
-          }
-
-          return {
-            id: application._id || application.id,
-            title,
-            message,
-            status,
-            icon,
-            bgColor,
-            jobTitle:
-              application.job?.title ||
-              application.job?.jobTitle ||
-              application.jobTitle ||
-              "Job Application",
-            company:
-              application.job?.company ||
-              application.job?.companyName ||
-              application.company ||
-              "",
-            createdAt:
-              application.createdAt ||
-              application.appliedAt ||
-              application.updatedAt,
-          };
-        });
+        );
 
         setNotifications(generatedNotifications);
       } catch (error) {
@@ -120,10 +136,11 @@ const Notifications = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
+
+          <p className="text-sm text-slate-400">
             Loading notifications...
           </p>
         </div>
@@ -132,13 +149,14 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
+
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+        <div className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-6">
           <Link
             to="/candidate/dashboard"
-            className="inline-flex items-center gap-2 text-gray-700 hover:text-blue-600"
+            className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
           >
             <FiArrowLeft />
             Back to Dashboard
@@ -147,88 +165,106 @@ const Notifications = () => {
       </header>
 
       {/* Main */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="mx-auto w-full max-w-5xl px-3 py-6 sm:px-6 sm:py-8 lg:py-10">
+
         {/* Heading */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
-            <FiBell className="text-2xl text-blue-600" />
+        <div className="mb-6 flex items-start gap-3 sm:mb-8 sm:gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 sm:h-14 sm:w-14">
+            <FiBell className="text-xl text-blue-400 sm:text-2xl" />
           </div>
 
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Notifications
             </h1>
 
-            <p className="text-gray-500 mt-1">
+            <p className="mt-1 text-sm leading-6 text-slate-400 sm:text-base">
               Stay updated about your job applications
             </p>
           </div>
         </div>
 
-        {/* Notifications list */}
+        {/* Empty State */}
         {notifications.length === 0 ? (
-          <div className="bg-white border rounded-2xl shadow-sm p-10 text-center">
-            <FiBell className="text-5xl text-gray-300 mx-auto mb-4" />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-10 text-center shadow-sm sm:p-10">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800">
+              <FiBell className="text-3xl text-slate-500" />
+            </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold">
               No notifications yet
             </h2>
 
-            <p className="text-gray-500 mb-6">
-              Notifications about your applications will appear here.
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
+              Notifications about your applications will
+              appear here.
             </p>
 
             <Link
               to="/candidate/jobs"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-700 sm:w-auto"
             >
               <FiBriefcase />
               Browse Jobs
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          /* Notifications List */
+          <div className="space-y-3 sm:space-y-4">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="bg-white border rounded-2xl shadow-sm p-5 hover:shadow-md transition"
+                className="rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-sm transition hover:border-slate-700 hover:shadow-md sm:p-5"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
+
+                  {/* Icon */}
                   <div
-                    className={`w-12 h-12 rounded-xl ${notification.bgColor} flex items-center justify-center shrink-0`}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${notification.bgColor}`}
                   >
                     {notification.icon}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <h3 className="font-semibold text-gray-900">
+                  {/* Content */}
+                  <div className="min-w-0 flex-1">
+
+                    {/* Title + Date */}
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                      <h3 className="wrap-break-word font-semibold text-white">
                         {notification.title}
                       </h3>
 
-                      <span className="text-sm text-gray-500">
-                        {formatDate(notification.createdAt)}
+                      <span className="shrink-0 text-xs text-slate-500 sm:text-sm">
+                        {formatDate(
+                          notification.createdAt
+                        )}
                       </span>
                     </div>
 
-                    <p className="text-gray-600 mt-2">
+                    {/* Message */}
+                    <p className="mt-2 wrap-break-word text-sm leading-6 text-slate-400">
                       {notification.message}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-3 mt-4">
-                      <span className="inline-flex items-center gap-2 text-sm text-gray-700">
-                        <FiBriefcase />
-                        {notification.jobTitle}
+                    {/* Job Details */}
+                    <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+
+                      <span className="flex max-w-full items-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-300 sm:text-sm">
+                        <FiBriefcase className="shrink-0 text-blue-400" />
+
+                        <span className="wrap-break-word">
+                          {notification.jobTitle}
+                        </span>
                       </span>
 
                       {notification.company && (
-                        <span className="text-sm text-gray-500">
+                        <span className="wrap-break-word rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-500 sm:text-sm">
                           {notification.company}
                         </span>
                       )}
 
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize ${getStatusClass(
                           notification.status
                         )}`}
                       >
