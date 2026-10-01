@@ -14,7 +14,7 @@ import testEmailRoutes from "./routes/testEmail.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
 
-// ✅ NEW
+// Recommendation routes
 import recommendationRoutes from "./routes/recommendation.routes.js";
 
 import notFound from "./middleware/notFound.js";
@@ -35,7 +35,28 @@ app.use(
 // MIDDLEWARE
 // ==========================================
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://ai-hire.vercel.app",
+    ],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  })
+);
+
 app.use(express.json());
 
 // ==========================================
