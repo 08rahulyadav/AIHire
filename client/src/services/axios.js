@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:7000/api/v1",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "https://aihire-backend-b6ok.onrender.com/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,8 +14,7 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem("token");
 
     if (token) {
-      config.headers.Authorization =
-        `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
